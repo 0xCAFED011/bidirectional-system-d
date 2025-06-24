@@ -227,12 +227,126 @@ And, consumers:
 
 
 
-@(define fig:core-lang (make-tag))
-@figure[fig:core-lang @elem{Core language grammar.}]{
+@(define sec:bib (make-tag))
+@generate-bibliography[#:tag sec:bib]
+
+
+@section{Appendix: Full Language Specification and Algorithm}
+
+@(define fig:whole-lang (make-tag))
+@figure[fig:whole-lang @elem{Complete raw language grammar.}]{
  @(base:with-my-rewriters (λ () (language->pict base:BS-raw)))
+}
+
+@(define fig:whole-elab (make-tag))
+@figure[fig:whole-elab @elem{Complete elaboration language extensions.}]{
+ @(base:with-my-rewriters (λ () (language->pict base:BS-elab)))
+}
+
+@(define fig:kinding (make-tag))
+@figure[fig:kinding
+        @elem{Complete kinding relation.@(linebreak)@(base:pretty-term (kind-type τ κ))}]{
+ @(base:with-my-rewriters
+   (λ ()
+     (hb-append
+      20
+      (parameterize
+          ([judgment-form-cases '("𝟘" "𝟙" "⊗" "⊕")])
+        (judgment-form->pict base:kind-type))
+      (parameterize
+          ([judgment-form-cases '("⊖" "↓" "⇑")])
+        (judgment-form->pict base:kind-type))
+      (parameterize
+          ([judgment-form-cases '("⊤" "⊥" "⅋" "&")])
+        (judgment-form->pict base:kind-type))
+      (parameterize
+          ([judgment-form-cases '("¬" "↑" "⇓")])
+        (judgment-form->pict base:kind-type)))))
+}
+
+
+@(define fig:whole-elab-binding (make-tag))
+@figure[fig:whole-elab-binding
+        @elem{Binding elaboration.@(linebreak)@(base:pretty-term (elaborate-binding Ξ χ X τ κ))}]{
+ @(base:with-my-rewriters (λ () (judgment-form->pict base:elaborate-binding)))
+}
+
+@(define fig:whole-mul-requirements (make-tag))
+@figure[fig:whole-mul-requirements
+        @elem{Requirment intersection.@(linebreak)@(base:pretty-metafunction-sig (requirements-mul Ξ Ξ) Ξ)}]{
+ @(base:with-my-rewriters (λ () (metafunction->pict base:requirements-mul)))
+}
+
+@(define fig:whole-add-requirements (make-tag))
+@figure[fig:whole-add-requirements
+        @elem{Requirment union.@(linebreak)@(base:pretty-metafunction-sig (requirements-add Ξ Ξ) Ξ)}]{
+ @(base:with-my-rewriters (λ () (metafunction->pict base:requirements-add)))
+}
+
+
+@(define fig:whole-cut (make-tag))
+@figure[fig:whole-cut
+        @elem{Cut.@(linebreak)@(base:pretty-term (cut ξ k Ξ K))}]{
+ @(base:with-my-rewriters (λ () (judgment-form->pict base:cut)))
 }
 
 
 
-@(define sec:bib (make-tag))
-@generate-bibliography[#:tag sec:bib]
+@(define fig:whole-synth-consumer (make-tag))
+@figure[fig:whole-synth-consumer
+        @elem{Unfocused consumer synthesis.@(linebreak)@(base:pretty-term (synth-consumer ξ c Ξ C τ κ))}]{
+ @(base:with-my-rewriters (λ () (judgment-form->pict base:synth-consumer)))
+}
+
+@(define fig:whole-check-producer (make-tag))
+@figure[fig:whole-check-producer
+        @elem{Unfocused producer checking.@(linebreak)@(base:pretty-term (check-producer ξ p τ κ Ξ P))}]{
+ @(base:with-my-rewriters (λ () (judgment-form->pict base:check-producer)))
+}
+
+@(define fig:whole-synth-producer (make-tag))
+@figure[fig:whole-synth-producer
+        @elem{Unfocused producer synthesis.@(linebreak)@(base:pretty-term (synth-producer ξ p Ξ P τ κ))}]{
+ @(base:with-my-rewriters (λ () (judgment-form->pict base:synth-producer)))
+}
+
+@(define fig:whole-check-consumer (make-tag))
+@figure[fig:whole-check-consumer
+        @elem{Unfocused consumer checking.@(linebreak)@(base:pretty-term (check-consumer ξ c τ κ Ξ C))}]{
+ @(base:with-my-rewriters (λ () (judgment-form->pict base:check-consumer)))
+}
+
+
+
+
+@(define fig:whole-focused-synth-consumer (make-tag))
+@figure[fig:whole-focused-synth-consumer
+        @elem{Focused consumer synthesis.@(linebreak)@(base:pretty-term (focused-synth-consumer ξ c Ξ C τ κ))}]{
+ @(base:with-my-rewriters (λ () (judgment-form->pict base:focused-synth-consumer)))
+}
+
+@(define fig:whole-focused-check-producer (make-tag))
+@figure[fig:whole-focused-check-producer
+        @elem{Focused producer checking.@(linebreak)@(base:pretty-term (focused-check-producer ξ p τ κ Ξ P))}]{
+ @(base:with-my-rewriters (λ () (judgment-form->pict base:focused-check-producer)))
+}
+
+@(define fig:whole-focused-synth-producer (make-tag))
+@figure[fig:whole-focused-synth-producer
+        @elem{Focused producer synthesis.@(linebreak)@(base:pretty-term (focused-synth-producer ξ p Ξ P τ κ))}]{
+ @(base:with-my-rewriters (λ () (judgment-form->pict base:focused-synth-producer)))
+}
+
+@(define fig:whole-focused-check-consumer (make-tag))
+@figure[fig:whole-focused-check-consumer
+        @elem{Focused consumer checking.@(linebreak)@(base:pretty-term (focused-check-consumer ξ c τ κ Ξ C))}]{
+ @(base:with-my-rewriters (λ () (judgment-form->pict base:focused-check-consumer)))
+}
+
+
+
+@(define fig:whole-reduction (make-tag))
+@figure[fig:whole-reduction
+        @elem{Complete reduction semantics.@(linebreak)@(base:pretty-term K) @(arrow->pict '-->) @(base:pretty-term K)}]{
+ @(base:with-my-rewriters (λ () (reduction-relation->pict base:red/BS)))
+}

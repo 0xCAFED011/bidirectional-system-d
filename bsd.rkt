@@ -302,7 +302,7 @@
 
   [(where (τ_′ κ ρ) (requirement-lookup Ξ x)) (type-equal τ_′ τ)
    ------------------ "elab-ρ"
-   (elaborate-binding Ξ (var x τ) x τ κ)]
+   (elaborate-binding Ξ (var x τ κ) x τ κ)]
 
   [(where (τ_′ κ ρ_′) (requirement-lookup Ξ x)) (type-equal τ_′ τ) (usage-equal ρ_′ ρ)
    ------------------ "elab"
@@ -345,7 +345,7 @@
    ----------------------- "B+_C"
    (focused-synth-consumer ξ q+ Ξ Q+ τ κ)]
 
-  [(var-synth x 𝕔 τ κ ξ)
+  [(var-synth x con τ κ ξ)
    ----------------------- "△Var_C"
    (focused-synth-consumer ξ x ((req x con τ κ 1)) x τ κ)]
   
@@ -370,7 +370,7 @@
    ----------------------- "⊖_C"
    (focused-synth-consumer ξ {(pack χ) ↦ k} Ξ {(pack X) ↦ K} (⊖ τ) +)]
 
-  [(valid-bind χ!) (cut (extended-bindings/synth ξ χ! prod) k Ξ K) (elaborate-binding Ξ χ! X τ -)
+  [(valid-bind χ!) (cut (extend-bindings/synth ξ χ! prod) k Ξ K) (elaborate-binding Ξ χ! X τ -)
    ----------------------- "↓_C"
    (focused-synth-consumer ξ {(dn χ!) ↦ k} Ξ {(dn X) ↦ K} (↓ τ) +)]
 
@@ -384,8 +384,7 @@
   #:mode (check-producer I I I I O O)
   #:contract (check-producer ξ p τ κ Ξ P)
 
-  [(valid-bind χ!) (cut (extend-bindings/check ξ χ! con) k Ξ K) (elaborate-binding Ξ χ! X τ κ)
-   (type-equal τ τ_′)
+  [(valid-bind χ!) (cut (extend-bindings/check ξ χ! con) k Ξ K) (elaborate-binding Ξ χ! X τ κ) (type-equal τ τ_′)
    --------------- "▽let_C"
    (check-producer ξ {let/C χ! ↦ k} τ_′ κ Ξ {let/C X ↦ K})]
 
@@ -398,7 +397,7 @@
   #:mode (focused-check-producer I I I I O O)
   #:contract (focused-check-producer ξ p τ κ Ξ P)
 
-  [(var-check x 𝕡 ξ)
+  [(var-check x prod ξ)
    ----------------------- "▽Var_P"
    (focused-check-producer ξ x τ κ ((req x prod τ κ 1)) x)]
   
@@ -452,9 +451,9 @@
    ----------------------- "B-_P"
    (focused-synth-producer ξ v- Ξ V- τ κ)]
 
-  [(var-synth x 𝕡 τ κ ξ)
+  [(var-synth x prod τ κ ξ)
    ----------------------- "△Var_P"
-   (focused-synth-producer ξ x ((req x prod τ 1)) x τ κ)]
+   (focused-synth-producer ξ x ((req x prod τ κ 1)) x τ κ)]
 
   [----------------------- "⊤_P"
    (focused-synth-producer ξ {⊤} ∅ {⊤} ⊤ -)]
@@ -491,8 +490,7 @@
   #:mode (check-consumer I I I I O O)
   #:contract (check-consumer ξ c τ κ Ξ C)
 
-  [(valid-bind χ!) (cut (extend-bindings/check ξ χ! prod) k Ξ K) (elaborate-binding Ξ χ! X τ κ)
-   (type-equal τ τ_′)
+  [(valid-bind χ!) (cut (extend-bindings/check ξ χ! prod) k Ξ K) (elaborate-binding Ξ χ! X τ κ) (type-equal τ τ_′)
    --------------- "▽let_P"
    (check-consumer ξ {let/P χ! ↦ k} τ_′ κ Ξ {let/P X ↦ K})]
 
@@ -505,7 +503,7 @@
   #:mode (focused-check-consumer I I I I O O)
   #:contract (focused-check-consumer ξ c τ κ Ξ C)
 
-  [(var-check x 𝕔 ξ)
+  [(var-check x con ξ)
    ----------------------- "▽Var_C"
    (focused-check-consumer ξ x τ κ ((req x con τ κ 1)) x)]
 
@@ -557,11 +555,11 @@
    #:domain K
    #:codomain K
 
-   [--> [CMD V+ ⇒ + {X ↦ K}]
+   [--> [CMD V+ ⇒ + {let/P X ↦ K}]
         (maybe-substitute K X V+)
         "let V+_β"]
 
-   [--> [CMD {X ↦ K} ⇒ + Q+]
+   [--> [CMD {let/C X ↦ K} ⇒ + Q+]
         (maybe-substitute K X Q+)
         "let Q+_β"]
 
@@ -593,11 +591,11 @@
         (maybe-substitute K X W)
         "⇑_β"]
 
-   [--> [CMD {X ↦ K} ⇒ - Q-]
+   [--> [CMD {let/C X ↦ K} ⇒ - Q-]
         (maybe-substitute K X Q-)
         "let Q−_β"]
 
-   [--> [CMD V- ⇒ - {X ↦ K}]
+   [--> [CMD V- ⇒ - {let/P X ↦ K}]
         (maybe-substitute K X V-)
         "let V−_β"]
 
@@ -643,7 +641,8 @@
   (provide make-literal-pict
            make-active-nonterminal
            with-my-rewriters
-           pretty-term)
+           pretty-term
+           pretty-metafunction-sig)
 
   (define (make-literal-pict base
                              #:pre-sub [pre-sub #false]
@@ -689,11 +688,11 @@
   (define (prettify/elab-term ξ t Ξ T #:ty [ty #false] #:focused? [focused? #false])
     (define turnstile (text (if focused? " ⊩" " ⊢") (literal-style)))
     (define fence (if ty
-                      (list (hb-append turnstile (orientation-subscript ty #true)) " ")
+                      (list (hb-append turnstile (orientation-script ty #true)) " ")
                       (list turnstile " ")))
     (prettify/elab (list ξ fence t) (list Ξ fence T)))
 
-  (define (orientation-subscript type sub?)
+  (define (orientation-script type sub?)
     (define script (if sub? 'subscript 'superscript))
     (match type
       ['o (text "o" (cons script (non-terminal-style)))]
@@ -702,7 +701,7 @@
 
 
   (define (bind-or-var x o)
-    (list x (orientation-subscript o #false)))
+    (list x (orientation-script o #false)))
 
   (define (type-term t τ κ)
     (list t " : " τ " : " κ))
@@ -729,22 +728,22 @@
                         [(list _ _ x τ κ ρ _)
                          (prettify x " : " τ " : " κ "; " ρ)])]
          ['bound/check (match-λ [(list _ _ x o _)
-                                 (prettify x (orientation-subscript (lw-e o)))])]
+                                 (prettify x (orientation-script (lw-e o) #true))])]
          ['bound/synth (match-λ [(list _ _ x o τ κ _)
-                                 (prettify (type-term (list x (orientation-subscript (lw-e o))) τ κ))])]
+                                 (prettify (type-term (list x (orientation-script (lw-e o) #true)) τ κ))])]
          ['nope (match-λ [(list _ _ τ κ _)
                           (prettify "_ : " τ " : " κ)])]
          ['req (match-λ [(list _ _ x o τ κ ρ _)
                          (prettify (type-term (bind-or-var x (lw-e o)) τ κ) "; " ρ)])]
          ['var-check (match-λ [(list _ _ x o ξ _)
-                               (prettify x (orientation-subscript (lw-e o)) " ∈ " ξ)])]
+                               (prettify x (orientation-script (lw-e o) #true) " ∈ " ξ)])]
          ['var-synth (match-λ [(list _ _ x o τ κ ξ _)
                                (prettify (type-term x τ κ) " ∈ " ξ)])]
          ['valid-bind (match-λ [(list _ _ χ _)
                                 (prettify χ " ok")])]
          ['extend-bindings/check (match-λ [(list _ _  ξ χ o _)
                                            (prettify ξ ", " (bind-or-var χ (lw-e o)))])]
-         ['exend-binding/synth (match-λ [(list _ _ ξ χ o _)
+         ['extend-bindings/synth (match-λ [(list _ _ ξ χ o _)
                                          (prettify ξ ", " (bind-or-var χ (lw-e o)))])]
          ['requirement-lookup (match-λ [(list _ _ Ξ x _)
                                         (prettify Ξ "{" x "}")])]
@@ -773,7 +772,7 @@
          ['check-producer (match-λ [(list _ _ ξ p τ κ Ξ P _)
                                     (prettify/elab-check ξ p τ κ Ξ P #:ty 'prod)])]
          ['focused-check-producer (match-λ [(list _ _ ξ p τ κ Ξ P _)
-                                            (prettify/elab-check ξ p τ κ Ξ P #:ty 'prod)])]
+                                            (prettify/elab-check ξ p τ κ Ξ P #:ty 'prod #:focused? #true)])]
          ['synth-producer (match-λ [(list _ _ ξ p Ξ P τ κ _)
                                     (prettify/elab-synth ξ p Ξ P τ κ #:ty 'prod)])]
          ['focused-synth-producer (match-λ [(list _ _ ξ p Ξ P τ κ _)
@@ -781,7 +780,7 @@
          ['check-consumer (match-λ [(list _ _ ξ c τ κ Ξ C _)
                                     (prettify/elab-check ξ c τ κ Ξ C #:ty 'con)])]
          ['focused-check-consumer (match-λ [(list _ _ ξ c τ κ Ξ C _)
-                                            (prettify/elab-check ξ c τ κ Ξ C #:ty 'con)])]
+                                            (prettify/elab-check ξ c τ κ Ξ C #:ty 'con #:focused? #true)])]
          ['substitute (match-λ [(list _ _ t (lw (list _ v_1 e_1 _) _ _ _ _ _ _) (lw (list _ v_2 e_2 _) _ _ _ _ _ _) _)
                                 (prettify t "[" v_1 " := " e_1 ", " v_2 " := " e_2 "]")]
                                [(list _ _ t v e _)
@@ -816,6 +815,12 @@
 
   (define-syntax-rule (pretty-term tm)
     (with-my-rewriters (λ () (term->pict BS-elab tm))))
+
+  (define-syntax-rule (pretty-metafunction-sig fun result)
+    (hb-append (default-font-size)
+               (pretty-term fun)
+               (arrow->pict '->)
+               (pretty-term result)))
 
   (define-syntax-rule (pretty-term/check pat tm)
     (if (redex-match? BS-elab pat tm)
