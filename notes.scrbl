@@ -157,7 +157,7 @@ to consider. Thus, it's better for the language to directly support the notion o
 You may have noticed that there is no way to ``end'' a program, that is, there must always be a next
 step, the next command to execute. Although some systems may include a special ``done'' command, this
 is a misunderstanding of the nature of termination. A computation terminates when it is ready to directly
-yield a result. Yield to what? To the next step. What next step? Some implicit new computation. This
+yield a result. Yield to what? To the next step, being some implicit new computation. This
 is something that we're already familiar with: when a program finishes running, it returns control
 (and, perhaps, a code) to the shell or operating system. Thus, a simple value can be understood
 as a part of an implicit command, yielding to some unknown consumer.
