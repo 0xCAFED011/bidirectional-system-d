@@ -1,0 +1,57 @@
+name: Test and Render
+on: [push]
+jobs:
+  Run-Redex-Tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Racket
+        uses: Bogdanp/setup-racket@v1.14
+        with:
+          architecture: 'x64'
+          distribution: 'full'
+          version: '8.17'
+      - name: Run Tests
+        run: raco test bsd.rkt
+  Render-Notes:
+    needs: Run-Redex-Tests
+    if: github.ref_type == 'tag'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Racket
+        uses: Bogdanp/setup-racket@v1.14
+        with:
+          architecture: 'x64'
+          distribution: 'full'
+          version: '8.17'
+      - name: Install TeX Live
+        uses: teatimeguest/setup-texlive-action@v3
+        with:
+          packages: |
+            collection-basic
+            collection-binextra
+            collection-fontsrecommended
+            collection-fontutils
+            collection-langenglish
+            collection-langeuropean
+            collection-latex
+            collection-latexrecommended
+            collection-luatex
+            collection-mathscience
+            ccaption
+            framed
+            hyphenat
+            mathabx
+            newtx
+            relsize
+      - name: Run Scribble
+        run: scribble --lualatex notes.scrbl
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: notes.pdf
