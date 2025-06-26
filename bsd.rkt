@@ -279,6 +279,26 @@
    (kind-type (⇓ τ) +)])
 
 
+(module+ test
+  
+  (test-judgment-holds (kind-type (𝟙 ⊗ 𝟙) +))
+
+  (test-equal (judgment-holds (kind-type (⊥ ⊗ 𝟙) +)) #false)
+
+  (test-judgment-holds (kind-type ((𝟙 ⊗ 𝟙) ⊗ 𝟙) +))
+
+  (test-judgment-holds (kind-type (𝟘 ⊕ 𝟘) +))
+
+  (test-judgment-holds (kind-type (⊥ ⅋ ⊥) -))
+
+  (test-judgment-holds (kind-type (⊤ & ⊤) -))
+
+  (test-equal (judgment-holds (kind-type (⊥ & 𝟘) -)) #false)
+
+  (test-judgment-holds (kind-type (⊤ & (⊤ & ⊤)) -))
+  )
+
+
 (define-judgment-form BS-elab
   #:mode (type-equal I I)
   #:contract (type-equal τ τ)
@@ -628,6 +648,41 @@
         "⇓_β"]))
 
 
+(module+ test
+
+  (define-syntax-rule (test-->/BS start step)
+    (test--> red/BS (term start) (term step)))
+
+  (define-syntax-rule (test-->>/BS start step)
+    (test-->> red/BS (term start) (term step)))
+
+  (define-term dummy-end [CMD x_end-prod ⇒ + x_end-con])
+
+  (test-->/BS [CMD () ⇒ + {() ↦ dummy-end}]
+              dummy-end)
+
+  (test-->/BS [CMD {[] ↦ dummy-end} ⇒ - []]
+              dummy-end)
+
+  (test-->>/BS [CMD {let/C x ↦ [CMD () ⇒ + x]} ⇒ + {() ↦ dummy-end}]
+              dummy-end)
+
+  (test-->>/BS [CMD {[] ↦ dummy-end} ⇒ - {let/P x ↦ [CMD x ⇒ - []]}]
+               dummy-end)
+
+  (test-->>/BS [CMD (pair () ()) ⇒ +
+                    {(pair x_0 x_1) ↦ [CMD x_0 ⇒ +
+                                           {() ↦ [CMD x_1 ⇒ + {() ↦ dummy-end}]}]}]
+               dummy-end)
+
+  (test-->>/BS [CMD {[duo x_0 x_1] ↦
+                                   [CMD {[] ↦
+                                            [CMD {[] ↦ dummy-end} ⇒ - x_1]} ⇒ - x_0]}
+                    ⇒ - [duo [] []]]
+               dummy-end)
+  )
+
+
 
 
 (module* typeset #f
@@ -807,9 +862,7 @@
            ['q+ (λ () (make-active-nonterminal "q" "+"))]
            ['q- (λ () (make-active-nonterminal "q" "−"))]
            ['Q+ (λ () (make-active-nonterminal "Q" "+"))]
-           ['Q- (λ () (make-active-nonterminal "Q" "−"))]
-           ['⇒+ (λ () (make-literal-pict "⇒" #:post-sup "+"))]
-           ['⇒- (λ () (make-literal-pict "⇒" #:post-sup "−"))])
+           ['Q- (λ () (make-active-nonterminal "Q" "−"))])
         (proc))))
 
 
@@ -821,9 +874,4 @@
                (pretty-term fun)
                (arrow->pict '->)
                (pretty-term result)))
-
-  (define-syntax-rule (pretty-term/check pat tm)
-    (if (redex-match? BS-elab pat tm)
-        (with-my-rewriters (λ () (term->pict BS-elab tm)))
-        (error "doesn't match!")))
   )
