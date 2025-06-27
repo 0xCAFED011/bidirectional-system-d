@@ -55,6 +55,8 @@ the type annotation burden is reduced, yet there is no appeal to unification.
 For an introduction to the idea, please see Conor McBride's blog post@~cite[bib:basics-bidirectional].
 The design space for bidirectional type systems is, historically, broad@~cite[bib:bidirectional-typing],
 but the structure of System@|~|D causes the ideal design choices to fall out naturally.
+The general idea and techniques behind the algorithm are adapted from work on a bidirectional
+typing algorithm for an ancestral sequent calculus, System@|~|L@~cite[bib:bidi-system-l].
 
 
 
@@ -185,14 +187,14 @@ of System@|~|D, but, thankfully, we can use concepts from other languages to dev
 what's going on here.
 
 Let's begin with the annotations, disregarding usage. The extra bit, (@(base:pretty-term κ)) is a @emph{kind}
-annotation. This may seem odd: after all, the title specifies that this language is monomorphic, thus
+annotation. This may seem odd: after all, the title specifies that this language is monomorphic, so
 there musn't be any higher-kinded types. Since that's the case, why bother with mentioning kinds?
 As it turns out, the set of types is richer than described above---in fact, there are twice as many types.
 This is because System@|~|D has the special property of allowing a deep exploration of @emph{duality};
 de@|~|Morgan duality, to be precise.
 
 The previously-described types were all of kind @(base:pretty-term +). The second set of types are of
-kind @(base:pretty-term −), each counterpart to a previous type:
+kind @(base:pretty-term -), each counterpart to a previous type:
 
 @itemlist[
  @item{top, @(base:pretty-term ⊤), dual to @(base:pretty-term 𝟘)}
@@ -207,7 +209,7 @@ For example, whereas @(base:pretty-term 𝟘) is an empty type, corresponding to
 empty type, corresponding to vacuous truth, and @(base:pretty-term ⊥) is a singleton type, corresponding
 to trivial falsity. 
 
-As before, each type has associated producers:
+As before, each type has associated producers (sometimes called copattern-matches @~cite[bib:copatterns]):
 
 @itemlist[
  @item{absurd match on top: @(base:pretty-term {⊤})}
@@ -216,7 +218,7 @@ As before, each type has associated producers:
  @item{match on with: @(base:pretty-term {[πl χ_l] ↦ k_l \| [πr χ_r] ↦ k_r})}
  ]
 
-And, consumers:
+And, consumers (sometimes called destructors or observations):
 
 @itemlist[
  @item{no consumer for top}
@@ -224,6 +226,10 @@ And, consumers:
  @item{with-destructors: @(base:pretty-term [duo f f])}
  @item{left and right projections: @(base:pretty-term [πl f]) and @(base:pretty-term [πr f])}
  ]
+
+The copattern-matching forms can be thought of as processes that are waiting on a request and respond
+according to its structure. A more provocative, yet accurate, perspective is that copattern-matching
+is a means of matching on the structure of continuations.
 
 
 
