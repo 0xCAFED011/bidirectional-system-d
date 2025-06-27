@@ -448,6 +448,39 @@
    ----------------------- "⇑_P"
    (focused-check-producer ξ (UP w) (⇑ τ) - Ξ (UP W))])
 
+(module+ test
+
+  (test-judgment-holds
+   (focused-check-producer
+    ((bound/check x prod)) x 𝟙 +
+    ((req x prod 𝟙 + 1)) x))
+
+  (test-judgment-holds
+   (focused-check-producer
+    ((bound/check x_1 prod) (bound/check x_2 prod)) x_2 (𝟙 ⊗ 𝟙) +
+    ((req x_2 prod (𝟙 ⊗ 𝟙) + 1)) x_2))
+
+  (test-judgment-holds
+   (focused-check-producer
+    () (pair () ()) (𝟙 ⊗ 𝟙) +
+    () (pair () ())))
+  
+  (test-judgment-holds
+   (focused-check-producer
+    ((bound/check x prod)) (pair (ιr x) ()) ((𝟘 ⊕ 𝟙) ⊗ 𝟙) +
+    ((req x prod 𝟙 + 1)) (pair (ιr x) ())))
+
+  (test-judgment-holds
+   (focused-check-producer
+    ((bound/check x_1 prod) (bound/check x_2 prod)) (pair x_1 x_2) (𝟙 ⊗ 𝟙) +
+    ((req x_1 prod 𝟙 + 1) (req x_2 prod 𝟙 + 1)) (pair x_1 x_2)))
+
+  (test-judgment-holds
+   (focused-check-producer
+    ((bound/check x_1 prod) (bound/check x_2 prod)) (pair x_1 x_1) (𝟙 ⊗ 𝟙) +
+    ((req x_1 prod 𝟙 + ω)) (pair x_1 x_1)))
+  )
+
 
 
 (define-judgment-form BS-elab
@@ -870,7 +903,7 @@
     (with-my-rewriters (λ () (term->pict BS-elab tm))))
 
   (define-syntax-rule (pretty-metafunction-sig fun result)
-    (hb-append (default-font-size)
+    (hb-append (/ (default-font-size) 2)
                (pretty-term fun)
                (arrow->pict '->)
                (pretty-term result)))
