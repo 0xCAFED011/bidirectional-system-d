@@ -587,6 +587,49 @@
    ----------------------- "⇓_C"
    (focused-check-consumer ξ [DN f] (⇓ τ) + Ξ [DN F])])
 
+(module+ test
+
+  (test-judgment-holds
+   (focused-check-consumer
+    () [] ⊥ -
+    () []))
+
+  (test-judgment-holds
+   (focused-check-consumer
+    ((bound/check x_1 prod)) [] ⊥ -
+    () []))
+
+  (test-judgment-holds
+   (focused-check-consumer
+    () [duo [] []] (⊥ ⅋ ⊥) -
+    () [duo [] []]))
+
+  (test-judgment-holds
+   (focused-check-consumer
+    ((bound/check x_1 con) (bound/check x_2 con)) [duo x_1 x_2] (⊥ ⅋ ⊥) -
+    ((req x_1 con ⊥ - 1) (req x_2 con ⊥ - 1)) [duo x_1 x_2]))
+
+  (test-judgment-holds
+   (focused-check-consumer
+    ((bound/check x_1 prod) (bound/check x_2 con) (bound/check x_3 con)) [πl [πl x_2]] ((⊥ & ⊤) & ⊤) -
+    ((req x_2 con ⊥ - 1)) [πl [πl x_2]]))
+
+  (test-judgment-holds
+   (focused-check-consumer
+    ((bound/check x_1 con) (bound/check x_2 con)) [πr [duo x_2 x_2]] (⊥ & (⊥ ⅋ ⊥)) -
+    ((req x_2 con ⊥ - ω)) [πr [duo x_2 x_2]]))
+
+  (test-judgment-holds
+   (focused-check-consumer
+    () [πl [πr [πl []]]] ((⊥ & (⊥ & ⊤)) & ⊤) -
+    () [πl [πr [πl []]]]))
+
+  (test-judgment-holds
+   (focused-check-consumer
+    ((bound/check x_1 con) (bound/check x_2 con)) [duo x_2 [duo x_1 x_2]] (⊥ ⅋ (⊥ ⅋ ⊥)) -
+    ((req x_1 con ⊥ - 1) (req x_2 con ⊥ - ω)) [duo x_2 [duo x_1 x_2]]))
+  )
+
 
 
 (define-metafunction BS-elab
