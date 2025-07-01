@@ -358,12 +358,17 @@
 
 
 (define-judgment-form BS-elab
-  #:mode (focused-synth-consumer I I O O O O)
-  #:contract (focused-synth-consumer ξ c Ξ C τ κ)
+  #:mode (blur-consumer I I O O O O)
+  #:contract (blur-consumer ξ c Ξ C τ κ)
 
   [(synth-consumer ξ q+ Ξ Q+ τ κ)
-   ----------------------- "B+_C"
-   (focused-synth-consumer ξ q+ Ξ Q+ τ κ)]
+   -------------- "B+_C"
+   (blur-consumer ξ q+ Ξ Q+ τ κ)])
+
+
+(define-judgment-form BS-elab
+  #:mode (focused-synth-consumer I I O O O O)
+  #:contract (focused-synth-consumer ξ c Ξ C τ κ)
 
   [(var-synth x con τ κ ξ)
    ----------------------- "△Var_C"
@@ -397,6 +402,13 @@
   [(valid-bind χ) (cut (extend-bindings/check ξ χ prod) k Ξ K) (elaborate-binding Ξ χ X τ +)
    ----------------------- "⇑_C"
    (focused-synth-consumer ξ {(⇑ χ) ↦ k} Ξ {(⇑ X) ↦ K} (⇑ τ) -)])
+
+(module+ test
+  (test-judgment-holds
+   (focused-synth-consumer
+    () {𝟘}
+    ∅ {𝟘} 𝟘 +))
+  )
 
 
 
@@ -497,12 +509,17 @@
 
 
 (define-judgment-form BS-elab
-  #:mode (focused-synth-producer I I O O O O)
-  #:contract (focused-synth-producer ξ p Ξ P τ κ)
+  #:mode (blur-producer I I O O O O)
+  #:contract (blur-producer ξ p Ξ P τ κ)
 
   [(synth-producer ξ v- Ξ V- τ κ)
-   ----------------------- "B-_P"
-   (focused-synth-producer ξ v- Ξ V- τ κ)]
+   -------------- "B-_P"
+   (blur-producer ξ v- Ξ V- τ κ)])
+
+
+(define-judgment-form BS-elab
+  #:mode (focused-synth-producer I I O O O O)
+  #:contract (focused-synth-producer ξ p Ξ P τ κ)
 
   [(var-synth x prod τ κ ξ)
    ----------------------- "△Var_P"
