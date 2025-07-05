@@ -348,9 +348,9 @@
   #:mode (synth-consumer I I O O O O)
   #:contract (synth-consumer ξ c Ξ C τ κ)
 
-  [(cut (extend-bindings/synth ξ χ! prod) k Ξ K) (elaborate-binding Ξ χ! X τ κ)
+  [(valid-bind χ) (cut (extend-bindings/synth ξ χ prod) k Ξ K) (elaborate-binding Ξ χ X τ κ)
    --------------- "△let_P"
-   (synth-consumer ξ {let/P χ! ↦ k} Ξ {let/P X ↦ K} τ κ)]
+   (synth-consumer ξ {let/P χ ↦ k} Ξ {let/P X ↦ K} τ κ)]
 
   [(focused-synth-consumer ξ c Ξ C τ κ)
    --------------- "F_△C"
@@ -368,7 +368,7 @@
 
 (define-judgment-form BS-elab
   #:mode (focused-synth-consumer I I O O O O)
-  #:contract (focused-synth-consumer ξ c Ξ C τ κ)
+  #:contract (focused-synth-consumer ξ f Ξ F τ κ)
 
   [(var-synth x con τ κ ξ)
    ----------------------- "△Var_C"
@@ -427,7 +427,7 @@
 
 (define-judgment-form BS-elab
   #:mode (focused-check-producer I I I I O O)
-  #:contract (focused-check-producer ξ p τ κ Ξ P)
+  #:contract (focused-check-producer ξ w τ κ Ξ W)
 
   [(var-check x prod ξ)
    ----------------------- "▽Var_P"
@@ -452,7 +452,7 @@
    ----------------------- "⊖_P"
    (focused-check-producer ξ (pack f) (⊖ τ) + Ξ (⊖ F))]
 
-  [(focused-synth-producer ξ v- τ - Ξ V-)
+  [(blur-producer ξ v- τ - Ξ V-)
    ----------------------- "↓_P"
    (focused-check-producer ξ (dn v-) (↓ τ) + Ξ (dn V-))]
 
@@ -519,7 +519,7 @@
 
 (define-judgment-form BS-elab
   #:mode (focused-synth-producer I I O O O O)
-  #:contract (focused-synth-producer ξ p Ξ P τ κ)
+  #:contract (focused-synth-producer ξ w Ξ W τ κ)
 
   [(var-synth x prod τ κ ξ)
    ----------------------- "△Var_P"
@@ -571,7 +571,7 @@
 
 (define-judgment-form BS-elab
   #:mode (focused-check-consumer I I I I O O)
-  #:contract (focused-check-consumer ξ c τ κ Ξ C)
+  #:contract (focused-check-consumer ξ f τ κ Ξ F)
 
   [(var-check x con ξ)
    ----------------------- "▽Var_C"
@@ -596,7 +596,7 @@
    ----------------------- "¬_C"
    (focused-check-consumer ξ [throw w] (¬ τ) - Ξ [throw W])]
 
-  [(focused-synth-consumer ξ q+ Ξ Q+ τ +)
+  [(blur-consumer ξ q+ Ξ Q+ τ +)
    ----------------------- "↑_C"
    (focused-check-consumer ξ [up q+] (↑ τ) - Ξ [up Q+])]
 
