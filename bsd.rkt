@@ -408,6 +408,29 @@
    (focused-synth-consumer
     () {𝟘}
     ∅ {𝟘} 𝟘 +))
+
+  (test-judgment-holds
+   (focused-synth-consumer
+    ((bound/check x_1 prod) (bound/check x_2 con)) {𝟘}
+    ∅ {𝟘} 𝟘 +))
+
+  (test-judgment-holds
+   (focused-synth-consumer
+    ((bound/check x_1 prod) (bound/synth x_2 con 𝟙 +)) {() ↦ [cmd x_1 ⇒ x_2]}
+    ((req x_2 con 𝟙 + 1) (req x_1 prod 𝟙 + 1)) {() ↦ [CMD x_1 ⇒ + x_2]} 𝟙 +))
+
+  (test-judgment-holds
+   (focused-synth-consumer
+    ((bound/synth x_1 con 𝟙 +)) {(pair (var x_2 𝟙 +) (nope 𝟙 +)) ↦ [cmd x_2 ⇒ x_1]}
+    ((req x_1 con 𝟙 + 1))
+    {(pair x_2 none) ↦ [CMD x_2 ⇒ + x_1]}
+    (𝟙 ⊗ 𝟙) +))
+
+  (test-judgment-holds
+   (focused-synth-consumer
+    ((bound/synth x_1 con (𝟙 ⊗ 𝟙) +)) {(pair x_2 x_3) ↦ [cmd (pair x_3 x_2) ⇒ x_1]}
+    ((req x_1 con (𝟙 ⊗ 𝟙) + 1)) {(pair x_2 x_3) ↦ [CMD (pair x_3 x_2) ⇒ + x_1]}
+    (𝟙 ⊗ 𝟙) +))
   )
 
 
@@ -553,6 +576,31 @@
   [(valid-bind χ) (cut (extend-bindings/check ξ χ con) k Ξ K) (elaborate-binding Ξ χ Ξ_′ X τ -)
    ----------------------- "⇓_P"
    (focused-synth-producer ξ {[DN χ] ↦ k} Ξ_′ {[DN X] ↦ K} (⇓ τ) +)])
+
+(module+ test
+
+  (test-judgment-holds
+   (focused-synth-producer
+    () {⊤}
+    ∅ {⊤} ⊤ -))
+
+  (test-judgment-holds
+   (focused-synth-producer
+    ((bound/check x_1 prod) (bound/synth x_2 con 𝟙 +) (bound/synth x_3 prod ⊥ -)) {⊤}
+    ∅ {⊤} ⊤ -))
+
+  (test-judgment-holds
+   (focused-synth-producer
+    ((bound/check x_1 con) (bound/synth x_2 prod 𝟙 +)) {[] ↦ [cmd x_2 ⇒ x_1]}
+    ((req x_2 prod 𝟙 + 1) (req x_1 con 𝟙 + 1)) {[] ↦ [CMD x_2 ⇒ + x_1]}
+    ⊥ -))
+
+  (test-judgment-holds
+   (focused-synth-producer
+    ((bound/synth x_1 prod ⊥ -)) {[duo x_2 (nope ⊥ -)] ↦ [cmd x_1 ⇒ x_2]}
+    ((req x_1 prod ⊥ - 1)) {[duo x_2 none] ↦ [CMD x_1 ⇒ - x_2]}
+    (⊥ ⅋ ⊥) -))
+  )
 
 
 
