@@ -600,6 +600,14 @@
     ((bound/synth x_1 prod ⊥ -)) {[duo x_2 (nope ⊥ -)] ↦ [cmd x_1 ⇒ x_2]}
     ((req x_1 prod ⊥ - 1)) {[duo x_2 none] ↦ [CMD x_1 ⇒ - x_2]}
     (⊥ ⅋ ⊥) -))
+
+  (test-judgment-holds
+   (focused-synth-producer
+    ((bound/synth x_1 prod (⊥ ⅋ ⊥) -))
+    {[πl x_l] ↦ [cmd x_1 ⇒ [duo [] x_l]] \| [πr x_r] ↦ [cmd x_1 ⇒ [duo x_r x_r]]}
+    ((req x_1 prod (⊥ ⅋ ⊥) - 1))
+    {[πl x_l] ↦ [CMD x_1 ⇒ - [duo [] x_l]] \| [πr x_r] ↦ [CMD x_1 ⇒ - [duo x_r x_r]]}
+    (⊥ & ⊥) -))
   )
 
 
@@ -791,6 +799,27 @@
 
 (module+ test
 
+  (define-syntax-rule (mk-CMD kind prod con)
+    (term [CMD prod ⇒ kind con]))
+
+  (define-syntax-rule (mk-CMD+ prod con)
+    (mk-CMD + prod con))
+
+  (define-syntax-rule (mk-CMD- prod con)
+    (mk-CMD - prod con))
+
+  (define-syntax match+
+    (syntax-rules ()
+      [(match+ () body) (term (() ↦ body))]
+      [(match+ b1 b2 body) (term ((pair b1 b2) ↦ body))]
+      [(match+ (bl bodyl) (br bodyr)) (term ((ιl bl) ↦ bodyl \| (ιr br) ↦ bodyr))]))
+
+  (define-syntax match-
+    (syntax-rules ()
+      [(match- () body) (term ([] ↦ body))]
+      [(match- b1 b2 body) (term ([duo b1 b2] ↦ body))]
+      [(match- (bl bodyl) (br bodyr)) (term ([πl bl] ↦ bodyl \| [πr br] ↦ bodyr))]))
+
   (define-syntax-rule (test-->/BS start step)
     (test--> red/BS (term start) (term step)))
 
@@ -799,28 +828,51 @@
 
   (define-term dummy-end [CMD x_end-prod ⇒ + x_end-con])
 
-  (test-->/BS [CMD () ⇒ + {() ↦ dummy-end}]
-              dummy-end)
 
-  (test-->/BS [CMD {[] ↦ dummy-end} ⇒ - []]
-              dummy-end)
+  (test-->/BS
+   ,(mk-CMD+ () ,(match+ () dummy-end))
+   dummy-end)
 
-  (test-->>/BS [CMD {let/C x ↦ [CMD () ⇒ + x]} ⇒ + {() ↦ dummy-end}]
-              dummy-end)
+  (test-->/BS
+   ,(mk-CMD- ,(match- [] dummy-end) [])
+   dummy-end)
 
-  (test-->>/BS [CMD {[] ↦ dummy-end} ⇒ - {let/P x ↦ [CMD x ⇒ - []]}]
-               dummy-end)
+  (test-->>/BS
+   ,(mk-CMD+ {let/C x ↦ ,(mk-CMD+ () x)}  ,(match+ () dummy-end))
+   dummy-end)
 
-  (test-->>/BS [CMD (pair () ()) ⇒ +
-                    {(pair x_0 x_1) ↦ [CMD x_0 ⇒ +
-                                           {() ↦ [CMD x_1 ⇒ + {() ↦ dummy-end}]}]}]
-               dummy-end)
+  (test-->>/BS
+   ,(mk-CMD- ,(match- [] dummy-end) {let/P x ↦ ,(mk-CMD- x [])})
+   dummy-end)
 
-  (test-->>/BS [CMD {[duo x_0 x_1] ↦
-                                   [CMD {[] ↦
-                                            [CMD {[] ↦ dummy-end} ⇒ - x_1]} ⇒ - x_0]}
-                    ⇒ - [duo [] []]]
-               dummy-end)
+  (test-->>/BS
+   ,(mk-CMD+
+     (pair () ())
+     ,(match+ x_0 x_1
+              ,(mk-CMD+ x_0 ,(match+ () ,(mk-CMD+ x_1 ,(match+ () dummy-end))))))
+   dummy-end)
+
+  (test-->>/BS
+   ,(mk-CMD+
+     (ιl (ιr ()))
+     ,(match+
+       (x_1l ,(mk-CMD+
+               x_1l
+               ,(match+
+                 (x_2l ,(mk-CMD- x_y x_z))
+                 (x_2r ,(mk-CMD+ x_2r ,(match+ () dummy-end))))))
+       (x_1r ,(mk-CMD- x_a x_b))))
+   dummy-end)
+
+  (test-->>/BS
+   ,(mk-CMD-
+     ,(match-
+       x_0 x_1
+       ,(mk-CMD-
+         ,(match- [] ,(mk-CMD- ,(match- [] dummy-end) x_1))
+         x_0))
+     [duo [] []])
+   dummy-end)
   )
 
 
