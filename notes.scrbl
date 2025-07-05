@@ -273,7 +273,7 @@ is a means of matching on the structure of continuations.
 
 @(define fig:whole-elab-binding (make-tag))
 @figure[fig:whole-elab-binding
-        @elem{Binding elaboration.@(linebreak)@(base:pretty-term (elaborate-binding Ξ χ X τ κ))}]{
+        @elem{Binding elaboration.@(linebreak)@(base:pretty-term (elaborate-binding Ξ χ Ξ_′ X τ κ))}]{
  @(base:with-my-rewriters (λ () (judgment-form->pict base:elaborate-binding)))
 }
 
