@@ -207,7 +207,7 @@
   [(requirements-mul Ξ ∅) ∅]
   [(requirements-mul (Ψ_l1 ... (req x o τ_l κ_l ρ_l) Ψ_l2 ...) (Ψ_r1 ... (req x o τ_r κ_r ρ_r) Ψ_r2 ...))
    (requirements-mul (Ψ_l1 ... Ψ_l2 ...) (Ψ_r1 ... (req x o τ_l κ_l (usage-add ρ_l ρ_r)) Ψ_r2 ...))
-   (judgment-holds (type-equal τ_l τ_r))]
+   (judgment-holds (type-equal τ_l τ_r κ_l))]
   [(requirements-mul (Ψ_l ...) (Ψ_r ...)) (Ψ_l ... Ψ_r ...)])
 
 
@@ -217,7 +217,7 @@
   [(requirements-add Ξ ∅) Ξ]
   [(requirements-add (Ψ_l1 ... (req x o τ_l κ_l ρ_l) Ψ_l2 ...) (Ψ_r1 ... (req x o τ_r κ_r ρ_r) Ψ_r2 ...))
    (requirements-add (Ψ_l1 ... Ψ_l2 ...) (Ψ_r1 ... (req x o τ_l κ_l (usage-max ρ_l ρ_r)) Ψ_r2 ...))
-   (judgment-holds (type-equal τ_l τ_r))]
+   (judgment-holds (type-equal τ_l τ_r κ_l))]
   [(requirements-add (Ψ_l ...) (Ψ_r ...)) (Ψ_l ... Ψ_r ...)])
 
 
@@ -301,12 +301,23 @@
 
 
 (define-judgment-form BS-elab
-  #:mode (type-equal I I)
-  #:contract (type-equal τ τ)
+  #:mode (kind-equal I I)
+  #:contract (kind-equal κ κ)
 
-  [(side-condition (alpha-equivalent? τ_1 τ_2))
+  [-----------
+   (kind-equal + +)]
+
+  [-----------
+   (kind-equal - -)])
+
+
+(define-judgment-form BS-elab
+  #:mode (type-equal I I I)
+  #:contract (type-equal τ τ κ)
+
+  [(kind-type τ_1 κ) (kind-type τ_2 κ) (side-condition (alpha-equivalent? τ_1 τ_2))
    ----------- "≡_τ"
-   (type-equal τ_1 τ_2)])
+   (type-equal τ_1 τ_2 κ)])
 
   
 
@@ -320,13 +331,13 @@
   [------------------ "elab-ρτ"
    (elaborate-binding (Ψ_1 ... (req x o τ κ ρ) Ψ_n ...) x (Ψ_1 ... Ψ_n ...) x τ κ)]
 
-  [(type-equal τ_′ τ)
+  [(kind-equal κ κ_′) (type-equal τ_′ τ κ)
    ------------------ "elab-ρ"
-   (elaborate-binding (Ψ_1 ... (req x o τ_′ κ ρ) Ψ_n ...) (var x τ κ) (Ψ_1 ... Ψ_n ...) x τ κ)]
+   (elaborate-binding (Ψ_1 ... (req x o τ_′ κ_′ ρ) Ψ_n ...) (var x τ κ) (Ψ_1 ... Ψ_n ...) x τ κ)]
 
-  [(type-equal τ_′ τ) (usage-equal ρ_′ ρ)
+  [(kind-equal κ κ_′) (type-equal τ_′ τ κ) (usage-equal ρ_′ ρ)
    ------------------ "elab"
-   (elaborate-binding (Ψ_1 ... (req x o τ_′ κ ρ_′) Ψ_n ...) (var x τ ρ) (Ψ_1 ... Ψ_n ...) x τ κ)])
+   (elaborate-binding (Ψ_1 ... (req x o τ_′ κ_′ ρ_′) Ψ_n ...) (var x τ κ ρ) (Ψ_1 ... Ψ_n ...) x τ κ)])
 
 
 
@@ -459,7 +470,7 @@
   #:mode (check-producer I I I I O O)
   #:contract (check-producer ξ p τ κ Ξ P)
 
-  [(valid-bind χ!) (cut (extend-bindings/synth ξ χ! con) k Ξ K) (elaborate-binding Ξ χ! Ξ_′ X τ κ) (type-equal τ τ_′)
+  [(valid-bind χ!) (cut (extend-bindings/synth ξ χ! con) k Ξ K) (elaborate-binding Ξ χ! Ξ_′ X τ κ) (type-equal τ τ_′ κ)
    --------------- "▽let_C"
    (check-producer ξ {let/C χ! ↦ k} τ_′ κ Ξ_′ {let/C X ↦ K})]
 
@@ -654,7 +665,7 @@
   #:mode (check-consumer I I I I O O)
   #:contract (check-consumer ξ c τ κ Ξ C)
 
-  [(valid-bind χ!) (cut (extend-bindings/synth ξ χ! prod) k Ξ K) (elaborate-binding Ξ χ! Ξ_′ X τ κ) (type-equal τ τ_′)
+  [(valid-bind χ!) (cut (extend-bindings/synth ξ χ! prod) k Ξ K) (elaborate-binding Ξ χ! Ξ_′ X τ κ) (type-equal τ τ_′ κ)
    --------------- "▽let_P"
    (check-consumer ξ {let/P χ! ↦ k} τ_′ κ Ξ_′ {let/P X ↦ K})]
 
@@ -1044,8 +1055,10 @@
                                        (prettify  Ξ "⟦" χ "⟧ ↝ (" Ξ_′ "; " (type-term X τ κ) ")")])]
          ['kind-type (match-λ [(list _ _ τ κ _)
                                (prettify τ " : " κ)])]
-         ['type-equal (match-λ [(list _ _ τ_1 τ_2 _)
-                                (prettify τ_1 " ≡ " τ_2)])]
+         ['kind-equal (match-λ [(list _ _ κ_1 κ_2 _)
+                                (prettify κ_1 " ≡ " κ_2)])]
+         ['type-equal (match-λ [(list _ _ τ_1 τ_2 κ _)
+                                (prettify τ_1 " ≡ " τ_2 " : " κ)])]
          ['requirements-mul (match-λ [(list _ _ Ξ_1 Ξ_2 _)
                                       (prettify Ξ_1 " × " Ξ_2)])]
          ['requirements-add (match-λ [(list _ _ Ξ_1 Ξ_2 _)
