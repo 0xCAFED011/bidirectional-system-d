@@ -3,6 +3,7 @@
 (require redex/reduction-semantics)
 
 (provide BS-raw
+         BS-exec
          BS-elab
          kind-type
          type-equal
@@ -79,7 +80,7 @@
 
 
 
-(define-extended-language BS-elab BS-raw
+(define-extended-language BS-exec BS-raw
   [P ::= W {let/C X ↦ K}]
   [W ::=
      x () (pair W W) (ιl W) (ιr W)
@@ -98,11 +99,6 @@
   [Q- ::= F]
   [K ::= [CMD P ⇒ κ C]]
   [X ::= x none]
-  [ξ binding-context ::= (ψ ...)]
-  [ψ variable-binding ::= (bound/check x o) (bound/synth x o τ κ)]
-  [o orientation ::= prod con]
-  [Ξ requirements ::= ∅ (Ψ ...)]
-  [Ψ variable-requirement ::= (req x o τ κ ρ)]
   #:binding-forms
   none #:exports nothing
   {[duo X_0 X_1] ↦ K #:refers-to (shadow X_0 X_1)}
@@ -117,6 +113,15 @@
   {(pack X) ↦ k #:refers-to X}
   {(dn X) ↦ k #:refers-to X}
   {(UP X) ↦ k #:refers-to X})
+
+
+
+(define-extended-language BS-elab BS-exec
+  [ξ binding-context ::= (ψ ...)]
+  [ψ variable-binding ::= (bound/check x o) (bound/synth x o τ κ)]
+  [o orientation ::= prod con]
+  [Ξ requirements ::= ∅ (Ψ ...)]
+  [Ψ variable-requirement ::= (req x o τ κ ρ)])
 
 
 
@@ -216,10 +221,6 @@
   [(requirements-add (Ψ_l ...) (Ψ_r ...)) (Ψ_l ... Ψ_r ...)])
 
 
-(define-metafunction BS-elab
-  requirement-lookup : Ξ x -> (Ξ τ κ ρ)
-  [(requirement-lookup (Ψ_l ... (req x o τ κ ρ) Ψ_r ...) x) ((Ψ_l ... Ψ_r ...) τ κ ρ)])
-
 
 
 (define-judgment-form BS-elab
@@ -316,17 +317,16 @@
   [------------------ "elab-[]"
    (elaborate-binding Ξ (nope τ κ) Ξ none τ κ)]
 
-  [(where (Ξ_′ τ κ ρ) (requirement-lookup Ξ x))
-   ------------------ "elab-ρτ"
-   (elaborate-binding Ξ x Ξ_′ x τ κ)]
+  [------------------ "elab-ρτ"
+   (elaborate-binding (Ψ_1 ... (req x o τ κ ρ) Ψ_n ...) x (Ψ_1 ... Ψ_n ...) x τ κ)]
 
-  [(where (Ξ_′ τ_′ κ ρ) (requirement-lookup Ξ x)) (type-equal τ_′ τ)
+  [(type-equal τ_′ τ)
    ------------------ "elab-ρ"
-   (elaborate-binding Ξ (var x τ κ) Ξ_′ x τ κ)]
+   (elaborate-binding (Ψ_1 ... (req x o τ_′ κ ρ) Ψ_n ...) (var x τ κ) (Ψ_1 ... Ψ_n ...) x τ κ)]
 
-  [(where (Ξ_′ τ_′ κ ρ_′) (requirement-lookup Ξ x)) (type-equal τ_′ τ) (usage-equal ρ_′ ρ)
+  [(type-equal τ_′ τ) (usage-equal ρ_′ ρ)
    ------------------ "elab"
-   (elaborate-binding Ξ (var x τ ρ) Ξ_′ x τ κ)])
+   (elaborate-binding (Ψ_1 ... (req x o τ_′ κ ρ_′) Ψ_n ...) (var x τ ρ) (Ψ_1 ... Ψ_n ...) x τ κ)])
 
 
 
@@ -795,15 +795,15 @@
         (maybe-substitute K_r X_r W)
         "⊕r_β"]
 
-   [--> [(pack F) ⇒ + {(pack X) ↦ K}]
+   [--> [CMD (pack F) ⇒ + {(pack X) ↦ K}]
         (maybe-substitute K X F)
         "⊖_β"]
 
-   [--> [(dn V-) ⇒ + {(dn X) ↦ K}]
+   [--> [CMD (dn V-) ⇒ + {(dn X) ↦ K}]
         (maybe-substitute K X V-)
         "↓_β"]
 
-   [--> [(UP W) ⇒ - {(UP X) ↦ K}]
+   [--> [CMD (UP W) ⇒ - {(UP X) ↦ K}]
         (maybe-substitute K X W)
         "⇑_β"]
 
@@ -831,15 +831,15 @@
         (maybe-substitute K_r X_r F)
         "&r_β"]
 
-   [--> [{(throw X) ↦ K} ⇒ - (throw W)]
+   [--> [CMD {(throw X) ↦ K} ⇒ - (throw W)]
         (maybe-substitute K X W)
         "¬_β"]
 
-   [--> [{(up X) ↦ K} ⇒ - (up Q+)]
+   [--> [CMD {(up X) ↦ K} ⇒ - (up Q+)]
         (maybe-substitute K X Q+)
         "↑_β"]
 
-   [--> [{(DN X) ↦ K} ⇒ + (DN F)]
+   [--> [CMD {(DN X) ↦ K} ⇒ + (DN F)]
         (maybe-substitute K X F)
         "⇓_β"]))
 
@@ -1040,8 +1040,6 @@
                                            (prettify ξ ", " (bind-or-var χ (lw-e o)))])]
          ['extend-bindings/synth (match-λ [(list _ _ ξ χ o _)
                                          (prettify ξ ", " (bind-or-var χ (lw-e o)))])]
-         ['requirement-lookup (match-λ [(list _ _ Ξ x _)
-                                        (prettify Ξ "{" x "}")])]
          ['elaborate-binding (match-λ [(list _ _ Ξ χ Ξ_′ X τ κ _)
                                        (prettify  Ξ "⟦" χ "⟧ ↝ (" Ξ_′ "; " (type-term X τ κ) ")")])]
          ['kind-type (match-λ [(list _ _ τ κ _)

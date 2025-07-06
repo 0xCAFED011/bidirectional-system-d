@@ -244,6 +244,11 @@ is a means of matching on the structure of continuations.
  @(base:with-my-rewriters (λ () (language->pict base:BS-raw)))
 }
 
+@(define fig:whole-exec (make-tag))
+@figure[fig:whole-exec @elem{Complete execution language grammar.}]{
+ @(base:with-my-rewriters (λ () (language->pict base:BS-exec)))
+}
+
 @(define fig:whole-elab (make-tag))
 @figure[fig:whole-elab @elem{Complete elaboration language extensions.}]{
  @(base:with-my-rewriters (λ () (language->pict base:BS-elab)))
