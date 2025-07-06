@@ -315,9 +315,57 @@
   #:mode (type-equal I I I)
   #:contract (type-equal τ τ κ)
 
-  [(kind-type τ_1 κ) (kind-type τ_2 κ) (side-condition (alpha-equivalent? τ_1 τ_2))
-   ----------- "≡_τ"
-   (type-equal τ_1 τ_2 κ)])
+  [-----------
+   (type-equal 𝟘 𝟘 +)]
+
+  [-----------
+   (type-equal 𝟙 𝟙 +)]
+
+  [(type-equal τ_1 τ_1′ +) (type-equal τ_2 τ_2 +)
+   -----------
+   (type-equal (τ_1 ⊗ τ_2) (τ_1′ ⊗ τ_2′) +)]
+
+  [(type-equal τ_l τ_l′ +) (type-equal τ_r τ_r′ +)
+   -----------
+   (type-equal (τ_l ⊕ τ_r) (τ_l′ ⊕ τ_r′) +)]
+
+  [(type-equal τ τ_′ -)
+   -----------
+   (type-equal (⊖ τ) (⊖ τ_′) +)]
+
+  [(type-equal τ τ_′ -)
+   -----------
+   (type-equal (↓ τ) (↓ τ_\′) +)]
+
+  [(type-equal τ τ_′ +)
+   -----------
+   (type-equal (⇑ τ) (⇑ τ_′) -)]
+
+  [-----------
+   (type-equal ⊤ ⊤ -)]
+
+  [-----------
+   (type-equal ⊥ ⊥ -)]
+
+  [(type-equal τ_1 τ_1′ -) (type-equal τ_2 τ_2′ -)
+   -----------
+   (type-equal (τ_1 ⅋ τ_2) (τ_1′ ⅋ τ_2′) -)]
+
+  [(type-equal τ_l τ_l′ -) (type-equal τ_r τ_r′ -)
+   -----------
+   (type-equal (τ_l & τ_r) (τ_l′ & τ_r′) -)]
+
+  [(type-equal τ τ_′ +)
+   -----------
+   (type-equal (¬ τ) (¬ τ_′) -)]
+
+  [(type-equal τ τ_′ +)
+   -----------
+   (type-equal (↑ τ) (↑ τ_′) -)]
+
+  [(type-equal τ τ_′ -)
+   -----------
+   (type-equal (⇓ τ) (⇓ τ_′) +)])
 
   
 
