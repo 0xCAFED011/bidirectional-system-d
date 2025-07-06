@@ -348,13 +348,28 @@
   #:mode (synth-consumer I I O O O O)
   #:contract (synth-consumer ξ c Ξ C τ κ)
 
-  [(valid-bind χ) (cut (extend-bindings/synth ξ χ prod) k Ξ K) (elaborate-binding Ξ χ Ξ_′ X τ κ)
+  [(valid-bind χ) (cut (extend-bindings/check ξ χ prod) k Ξ K) (elaborate-binding Ξ χ Ξ_′ X τ κ)
    --------------- "△let_P"
    (synth-consumer ξ {let/P χ ↦ k} Ξ_′ {let/P X ↦ K} τ κ)]
 
-  [(focused-synth-consumer ξ c Ξ C τ κ)
+  [(focused-synth-consumer ξ f Ξ F τ κ)
    --------------- "F_△C"
-   (synth-consumer ξ c Ξ C τ κ)])
+   (synth-consumer ξ f Ξ F τ κ)])
+
+(module+ test
+
+  (test-judgment-holds
+   (synth-consumer
+    ((bound/synth x_1 con 𝟙 +)) {let/P x_2 ↦ [cmd x_2 ⇒ x_1]}
+    ((req x_1 con 𝟙 + 1)) {let/P x_2 ↦ [CMD x_2 ⇒ + x_1]}
+    𝟙 +))
+
+  (test-judgment-holds
+   (synth-consumer
+    ((bound/synth x_1 con (𝟙 ⊗ 𝟙) +)) {let/P x_2 ↦ [cmd (pair x_2 x_2) ⇒ x_1]}
+    ((req x_1 con (𝟙 ⊗ 𝟙) + 1)) {let/P x_2 ↦ [CMD (pair x_2 x_2) ⇒ + x_1]}
+    𝟙 +))
+  )
 
 
 (define-judgment-form BS-elab
@@ -431,6 +446,11 @@
     ((bound/synth x_1 con (𝟙 ⊗ 𝟙) +)) {(pair x_2 x_3) ↦ [cmd (pair x_3 x_2) ⇒ x_1]}
     ((req x_1 con (𝟙 ⊗ 𝟙) + 1)) {(pair x_2 x_3) ↦ [CMD (pair x_3 x_2) ⇒ + x_1]}
     (𝟙 ⊗ 𝟙) +))
+
+  (test-judgment-holds
+   (focused-synth-consumer
+    ((bound/synth x con 𝟙 +)) x
+    ((req x con 𝟙 + 1)) x 𝟙 +))
   )
 
 
@@ -439,13 +459,22 @@
   #:mode (check-producer I I I I O O)
   #:contract (check-producer ξ p τ κ Ξ P)
 
-  [(valid-bind χ!) (cut (extend-bindings/check ξ χ! con) k Ξ K) (elaborate-binding Ξ χ! Ξ_′ X τ κ) (type-equal τ τ_′)
+  [(valid-bind χ!) (cut (extend-bindings/synth ξ χ! con) k Ξ K) (elaborate-binding Ξ χ! Ξ_′ X τ κ) (type-equal τ τ_′)
    --------------- "▽let_C"
    (check-producer ξ {let/C χ! ↦ k} τ_′ κ Ξ_′ {let/C X ↦ K})]
 
-  [(focused-check-producer ξ p τ κ Ξ P)
+  [(focused-check-producer ξ w τ κ Ξ W)
    --------------- "F_▽P"
-   (check-producer ξ p τ κ Ξ P)])
+   (check-producer ξ w τ κ Ξ W)])
+
+(module+ test
+
+  (test-judgment-holds
+   (check-producer
+    ((bound/check x_1 prod)) {let/C (var x_2 𝟙 +) ↦ [cmd x_1 ⇒ x_2]}
+    𝟙 +
+    ((req x_1 prod 𝟙 + 1)) {let/C x_2 ↦ [CMD x_1 ⇒ + x_2]}))
+  )
 
 
 (define-judgment-form BS-elab
@@ -522,13 +551,22 @@
   #:mode (synth-producer I I O O O O)
   #:contract (synth-producer ξ p Ξ P τ κ)
 
-  [(valid-bind χ) (cut (extend-bindings/synth ξ χ con) k Ξ K) (elaborate-binding Ξ χ Ξ_′ X τ κ)
+  [(valid-bind χ) (cut (extend-bindings/check ξ χ con) k Ξ K) (elaborate-binding Ξ χ Ξ_′ X τ κ)
    --------------- "△let_C"
    (synth-producer ξ {let/C χ ↦ k} Ξ_′ {let/C X ↦ K} τ κ)]
 
-  [(focused-synth-producer ξ p Ξ P τ κ)
+  [(focused-synth-producer ξ w Ξ W τ κ)
    --------------- "F_△P"
-   (synth-producer ξ p Ξ P τ κ)])
+   (synth-producer ξ w Ξ W τ κ)])
+
+(module+ test
+
+  (test-judgment-holds
+   (synth-producer
+    ((bound/synth x_1 prod ⊥ -)) {let/C x_2 ↦ [cmd x_1 ⇒ x_2]}
+    ((req x_1 prod ⊥ - 1)) {let/C x_2 ↦ [CMD x_1 ⇒ - x_2]}
+    ⊥ -))
+  )
 
 
 (define-judgment-form BS-elab
@@ -616,13 +654,22 @@
   #:mode (check-consumer I I I I O O)
   #:contract (check-consumer ξ c τ κ Ξ C)
 
-  [(valid-bind χ!) (cut (extend-bindings/check ξ χ! prod) k Ξ K) (elaborate-binding Ξ χ! Ξ_′ X τ κ) (type-equal τ τ_′)
+  [(valid-bind χ!) (cut (extend-bindings/synth ξ χ! prod) k Ξ K) (elaborate-binding Ξ χ! Ξ_′ X τ κ) (type-equal τ τ_′)
    --------------- "▽let_P"
    (check-consumer ξ {let/P χ! ↦ k} τ_′ κ Ξ_′ {let/P X ↦ K})]
 
-  [(focused-check-consumer ξ c τ κ Ξ C)
+  [(focused-check-consumer ξ f τ κ Ξ F)
    --------------- "F_▽C"
-   (check-consumer ξ c τ κ Ξ C)])
+   (check-consumer ξ f τ κ Ξ F)])
+
+(module+ test
+
+  (test-judgment-holds
+   (check-consumer
+    ((bound/check x_1 con)) {let/P (var x_2 ⊥ -) ↦ [cmd x_2 ⇒ x_1]}
+    ⊥ -
+    ((req x_1 con ⊥ - 1)) {let/P x_2 ↦ [CMD x_2 ⇒ - x_1]}))
+  )
   
 
 (define-judgment-form BS-elab
