@@ -134,7 +134,7 @@ algebraic data types. Here is what commands could look like, for specific types:
  ]
 
 Sometimes, we want to bind a value to a variable, so as to make an expression concise, or so that
-the value can be used multiple times. This is done with the ``let'' form: @base:pretty-term[{let/P χ ↦ k}].
+the value can be used multiple times. This is done with the ``let'' form: @base:pretty-term[{let/P ▽χ κ ↦ k}].
 Notice how the syntax of programs makes the control flow explicit, and the next step of computation
 can always be found, immediately.
 
@@ -143,9 +143,9 @@ and offers some choices
 
 @itemlist[
  @item{a bare variable: @base:pretty-term[x]}
- @item{a variable with type annotation: @base:pretty-term[(var x τ κ)]}
- @item{a variable with type and usage annotations: @base:pretty-term[(var x τ κ ρ)]}
- @item{a non-binding, with type annotation: @base:pretty-term[(nope τ κ)]}
+ @item{a variable with type annotation: @base:pretty-term[(▽var x τ)]}
+ @item{a variable with type and usage annotations: @base:pretty-term[(▽var x τ ρ)]}
+ @item{a non-binding, with type annotation: @base:pretty-term[(nope τ)]}
  ]
 
 For a variable, omitted type and/or usage annotations can be completely synthesized (inferred),
@@ -168,7 +168,7 @@ This implies that consumers may be more involved than the straightforward patter
 seen thus far. Indeed, if we can describe ending a program via a command with an abstract consumer,
 then it must be possible for consumers to be bound to variables. And, if a consumer can be bound to
 a variable, then there must be a corresponding binding form, no? Indeed, there is:
-@base:pretty-term[{let/C χ ↦ k}], a mirror-image of the previously-described let-form. Using this form,
+@base:pretty-term[{let/C △χ ↦ k}], a mirror-image of the previously-described let-form. Using this form,
 we can abstract over consumers.
 
 As an example, here we abstract over a matching consumer:
@@ -303,10 +303,16 @@ found in popular functional programming languages or proof-assistants based on d
 }
 
 
-@(define fig:whole-elab-binding (make-tag))
-@figure[fig:whole-elab-binding
-        @elem{Binding elaboration.@(linebreak)@(base:pretty-term (elaborate-binding Ξ χ Ξ_′ X τ κ))}]{
- @(base:with-my-rewriters (λ () (judgment-form->pict base:elaborate-binding)))
+@(define fig:whole-elab-binding/check (make-tag))
+@figure[fig:whole-elab-binding/check
+        @elem{Checked binding elaboration.@(linebreak)@(base:pretty-term (elaborate-binding/check Ξ χ Ξ_′ X τ κ))}]{
+ @(base:with-my-rewriters (λ () (judgment-form->pict base:elaborate-binding/check)))
+}
+
+@(define fig:whole-elab-binding/synth (make-tag))
+@figure[fig:whole-elab-binding/synth
+        @elem{Synthesizing binding elaboration.@(linebreak)@(base:pretty-term (elaborate-binding/synth Ξ χ Ξ_′ X τ κ))}]{
+ @(base:with-my-rewriters (λ () (judgment-form->pict base:elaborate-binding/synth)))
 }
 
 @(define fig:whole-mul-requirements (make-tag))
