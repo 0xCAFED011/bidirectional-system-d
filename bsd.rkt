@@ -103,7 +103,7 @@
      {(pack X) ↦ k} {(dn X) ↦ k} {(UP X) ↦ k}]
   [Q+ ::= C]
   [Q- ::= F]
-  [K ::= [CMD P ⇒ κ C]]
+  [K ::= [CMD P ⇒ C]]
   [X ::= x none]
   #:binding-forms
   none #:exports nothing
@@ -456,12 +456,12 @@
   #:contract (cut ξ k Ξ K)
 
   [(synth-consumer ξ c Ξ_1 C τ κ) (check-producer ξ p τ κ Ξ_2 P)
-   ---- "△C"
-   (cut ξ [cmd p ⇒ c] (requirements-mul Ξ_1 Ξ_2) [CMD P ⇒ κ C])]
+   ----
+   (cut ξ [cmd p ⇒ c] (requirements-mul Ξ_1 Ξ_2) [CMD P ⇒ C])]
 
   [(synth-producer ξ p Ξ_1 P τ κ) (check-consumer ξ c τ κ Ξ_2 C)
-   ---- "△P"
-   (cut ξ [cmd p ⇒ c] (requirements-mul Ξ_1 Ξ_2) [CMD P ⇒ κ C])])
+   ----
+   (cut ξ [cmd p ⇒ c] (requirements-mul Ξ_1 Ξ_2) [CMD P ⇒ C])])
 
   
 
@@ -482,13 +482,13 @@
   (test-judgment-holds
    (synth-consumer
     ((bound/synth x_1 con 𝟙 +)) {let/P x_2 + ↦ [cmd x_2 ⇒ x_1]}
-    ((req x_1 con 𝟙 + 1)) {let/P x_2 ↦ [CMD x_2 ⇒ + x_1]}
+    ((req x_1 con 𝟙 + 1)) {let/P x_2 ↦ [CMD x_2 ⇒ x_1]}
     𝟙 +))
 
   (test-judgment-holds
    (synth-consumer
     ((bound/synth x_1 con (𝟙 ⊗ 𝟙) +)) {let/P x_2 + ↦ [cmd (pair x_2 x_2) ⇒ x_1]}
-    ((req x_1 con (𝟙 ⊗ 𝟙) + 1)) {let/P x_2 ↦ [CMD (pair x_2 x_2) ⇒ + x_1]}
+    ((req x_1 con (𝟙 ⊗ 𝟙) + 1)) {let/P x_2 ↦ [CMD (pair x_2 x_2) ⇒ x_1]}
     𝟙 +))
   )
 
@@ -545,19 +545,19 @@
   (test-judgment-holds
    (focused-synth-consumer
     ((bound/check x_1 prod) (bound/synth x_2 con 𝟙 +)) {() ↦ [cmd x_1 ⇒ x_2]}
-    ((req x_2 con 𝟙 + 1) (req x_1 prod 𝟙 + 1)) {() ↦ [CMD x_1 ⇒ + x_2]} 𝟙 +))
+    ((req x_2 con 𝟙 + 1) (req x_1 prod 𝟙 + 1)) {() ↦ [CMD x_1 ⇒ x_2]} 𝟙 +))
 
   (test-judgment-holds
    (focused-synth-consumer
     ((bound/synth x_1 con 𝟙 +)) {(pair (▽var x_2 𝟙) (nope 𝟙)) ↦ [cmd x_2 ⇒ x_1]}
     ((req x_1 con 𝟙 + 1))
-    {(pair x_2 none) ↦ [CMD x_2 ⇒ + x_1]}
+    {(pair x_2 none) ↦ [CMD x_2 ⇒ x_1]}
     (𝟙 ⊗ 𝟙) +))
 
   (test-judgment-holds
    (focused-synth-consumer
     ((bound/synth x_1 con (𝟙 ⊗ 𝟙) +)) {(pair x_2 x_3) ↦ [cmd (pair x_3 x_2) ⇒ x_1]}
-    ((req x_1 con (𝟙 ⊗ 𝟙) + 1)) {(pair x_2 x_3) ↦ [CMD (pair x_3 x_2) ⇒ + x_1]}
+    ((req x_1 con (𝟙 ⊗ 𝟙) + 1)) {(pair x_2 x_3) ↦ [CMD (pair x_3 x_2) ⇒ x_1]}
     (𝟙 ⊗ 𝟙) +))
 
   (test-judgment-holds
@@ -586,7 +586,7 @@
    (check-producer
     ((bound/check x_1 prod)) {let/C (△var x_2 𝟙 +) ↦ [cmd x_1 ⇒ x_2]}
     𝟙 +
-    ((req x_1 prod 𝟙 + 1)) {let/C x_2 ↦ [CMD x_1 ⇒ + x_2]}))
+    ((req x_1 prod 𝟙 + 1)) {let/C x_2 ↦ [CMD x_1 ⇒ x_2]}))
   )
 
 
@@ -677,7 +677,7 @@
   (test-judgment-holds
    (synth-producer
     ((bound/synth x_1 prod ⊥ -)) {let/C x_2 - ↦ [cmd x_1 ⇒ x_2]}
-    ((req x_1 prod ⊥ - 1)) {let/C x_2 ↦ [CMD x_1 ⇒ - x_2]}
+    ((req x_1 prod ⊥ - 1)) {let/C x_2 ↦ [CMD x_1 ⇒ x_2]}
     ⊥ -))
   )
 
@@ -735,13 +735,13 @@
   (test-judgment-holds
    (focused-synth-producer
     ((bound/check x_1 con) (bound/synth x_2 prod 𝟙 +)) {[] ↦ [cmd x_2 ⇒ x_1]}
-    ((req x_2 prod 𝟙 + 1) (req x_1 con 𝟙 + 1)) {[] ↦ [CMD x_2 ⇒ + x_1]}
+    ((req x_2 prod 𝟙 + 1) (req x_1 con 𝟙 + 1)) {[] ↦ [CMD x_2 ⇒ x_1]}
     ⊥ -))
 
   (test-judgment-holds
    (focused-synth-producer
     ((bound/synth x_1 prod ⊥ -)) {[duo x_2 (nope ⊥)] ↦ [cmd x_1 ⇒ x_2]}
-    ((req x_1 prod ⊥ - 1)) {[duo x_2 none] ↦ [CMD x_1 ⇒ - x_2]}
+    ((req x_1 prod ⊥ - 1)) {[duo x_2 none] ↦ [CMD x_1 ⇒ x_2]}
     (⊥ ⅋ ⊥) -))
 
   (test-judgment-holds
@@ -749,7 +749,7 @@
     ((bound/synth x_1 prod (⊥ ⅋ ⊥) -))
     {[πl x_l] ↦ [cmd x_1 ⇒ [duo [] x_l]] \| [πr x_r] ↦ [cmd x_1 ⇒ [duo x_r x_r]]}
     ((req x_1 prod (⊥ ⅋ ⊥) - 1))
-    {[πl x_l] ↦ [CMD x_1 ⇒ - [duo [] x_l]] \| [πr x_r] ↦ [CMD x_1 ⇒ - [duo x_r x_r]]}
+    {[πl x_l] ↦ [CMD x_1 ⇒ [duo [] x_l]] \| [πr x_r] ↦ [CMD x_1 ⇒ [duo x_r x_r]]}
     (⊥ & ⊥) -))
   )
 
@@ -773,7 +773,7 @@
    (check-consumer
     ((bound/check x_1 con)) {let/P (△var x_2 ⊥ -) ↦ [cmd x_2 ⇒ x_1]}
     ⊥ -
-    ((req x_1 con ⊥ - 1)) {let/P x_2 ↦ [CMD x_2 ⇒ - x_1]}))
+    ((req x_1 con ⊥ - 1)) {let/P x_2 ↦ [CMD x_2 ⇒ x_1]}))
   )
   
 
@@ -876,75 +876,75 @@
    #:domain K
    #:codomain K
 
-   [--> [CMD V+ ⇒ + {let/P X ↦ K}]
+   [--> [CMD V+ ⇒ {let/P X ↦ K}]
         (maybe-substitute K X V+)
         "let V+_β"]
 
-   [--> [CMD {let/C X ↦ K} ⇒ + Q+]
+   [--> [CMD {let/C X ↦ K} ⇒ Q+]
         (maybe-substitute K X Q+)
         "let Q+_β"]
 
-   [--> [CMD () ⇒ + {() ↦ K}]
+   [--> [CMD () ⇒ {() ↦ K}]
         K
         "𝟙_β"]
 
-   [--> [CMD (pair W_1 W_2) ⇒ + {(pair X_1 X_2) ↦ K}]
+   [--> [CMD (pair W_1 W_2) ⇒ {(pair X_1 X_2) ↦ K}]
         (maybe-substitute2 K X_1 W_1 X_2 W_2)
         "⊗_β"]
 
-   [--> [CMD (ιl W) ⇒ + {(ιl X_l) ↦ K_l \| (ιr X_r) ↦ K_r}]
+   [--> [CMD (ιl W) ⇒ {(ιl X_l) ↦ K_l \| (ιr X_r) ↦ K_r}]
         (maybe-substitute K_l X_l W)
         "⊕l_β"]
 
-   [--> [CMD (ιr W) ⇒ + {(ιl X_l) ↦ K_l \| (ιr X_r) ↦ K_r}]
+   [--> [CMD (ιr W) ⇒ {(ιl X_l) ↦ K_l \| (ιr X_r) ↦ K_r}]
         (maybe-substitute K_r X_r W)
         "⊕r_β"]
 
-   [--> [CMD (pack F) ⇒ + {(pack X) ↦ K}]
+   [--> [CMD (pack F) ⇒ {(pack X) ↦ K}]
         (maybe-substitute K X F)
         "⊖_β"]
 
-   [--> [CMD (dn V-) ⇒ + {(dn X) ↦ K}]
+   [--> [CMD (dn V-) ⇒ {(dn X) ↦ K}]
         (maybe-substitute K X V-)
         "↓_β"]
 
-   [--> [CMD (UP W) ⇒ - {(UP X) ↦ K}]
+   [--> [CMD (UP W) ⇒ {(UP X) ↦ K}]
         (maybe-substitute K X W)
         "⇑_β"]
 
-   [--> [CMD {let/C X ↦ K} ⇒ - Q-]
+   [--> [CMD {let/C X ↦ K} ⇒ Q-]
         (maybe-substitute K X Q-)
         "let Q−_β"]
 
-   [--> [CMD V- ⇒ - {let/P X ↦ K}]
+   [--> [CMD V- ⇒ {let/P X ↦ K}]
         (maybe-substitute K X V-)
         "let V−_β"]
 
-   [--> [CMD {[] ↦ K} ⇒ - []]
+   [--> [CMD {[] ↦ K} ⇒ []]
         K
         "⊥_β"]
 
-   [--> [CMD {[duo X_1 X_2] ↦ K} ⇒ - [duo F_1 F_2]]
+   [--> [CMD {[duo X_1 X_2] ↦ K} ⇒ [duo F_1 F_2]]
         (maybe-substitute2 K X_1 F_1 X_2 F_2)
         "⅋_β"]
 
-   [--> [CMD {[πl X_l] ↦ K_l \| [πr X_r] ↦ K_r} ⇒ - [πl F]]
+   [--> [CMD {[πl X_l] ↦ K_l \| [πr X_r] ↦ K_r} ⇒ [πl F]]
         (maybe-substitute K_l X_l F)
         "&l_β"]
 
-   [--> [CMD {[πl X_l] ↦ K_l \| [πr X_r] ↦ K_r} ⇒ - [πr F]]
+   [--> [CMD {[πl X_l] ↦ K_l \| [πr X_r] ↦ K_r} ⇒ [πr F]]
         (maybe-substitute K_r X_r F)
         "&r_β"]
 
-   [--> [CMD {(throw X) ↦ K} ⇒ - (throw W)]
+   [--> [CMD {(throw X) ↦ K} ⇒ (throw W)]
         (maybe-substitute K X W)
         "¬_β"]
 
-   [--> [CMD {(up X) ↦ K} ⇒ - (up Q+)]
+   [--> [CMD {(up X) ↦ K} ⇒ (up Q+)]
         (maybe-substitute K X Q+)
         "↑_β"]
 
-   [--> [CMD {(DN X) ↦ K} ⇒ + (DN F)]
+   [--> [CMD {(DN X) ↦ K} ⇒ (DN F)]
         (maybe-substitute K X F)
         "⇓_β"]))
 
@@ -978,50 +978,50 @@
   (define-syntax-rule (test-->>/BS start step)
     (test-->> red/BS (term start) (term step)))
 
-  (define-term dummy-end [CMD x_end-prod ⇒ + x_end-con])
+  (define-term dummy-end [CMD x_end-prod ⇒ x_end-con])
 
 
   (test-->/BS
-   ,(mk-CMD+ () ,(match+ () dummy-end))
+   ,(mk-CMD () ,(match+ () dummy-end))
    dummy-end)
 
   (test-->/BS
-   ,(mk-CMD- ,(match- [] dummy-end) [])
+   ,(mk-CMD ,(match- [] dummy-end) [])
    dummy-end)
 
   (test-->>/BS
-   ,(mk-CMD+ {let/C x ↦ ,(mk-CMD+ () x)}  ,(match+ () dummy-end))
+   ,(mk-CMD {let/C x ↦ ,(mk-CMD () x)}  ,(match+ () dummy-end))
    dummy-end)
 
   (test-->>/BS
-   ,(mk-CMD- ,(match- [] dummy-end) {let/P x ↦ ,(mk-CMD- x [])})
+   ,(mk-CMD ,(match- [] dummy-end) {let/P x ↦ ,(mk-CMD x [])})
    dummy-end)
 
   (test-->>/BS
-   ,(mk-CMD+
+   ,(mk-CMD
      (pair () ())
      ,(match+ x_0 x_1
-              ,(mk-CMD+ x_0 ,(match+ () ,(mk-CMD+ x_1 ,(match+ () dummy-end))))))
+              ,(mk-CMD x_0 ,(match+ () ,(mk-CMD x_1 ,(match+ () dummy-end))))))
    dummy-end)
 
   (test-->>/BS
-   ,(mk-CMD+
+   ,(mk-CMD
      (ιl (ιr ()))
      ,(match+
-       (x_1l ,(mk-CMD+
+       (x_1l ,(mk-CMD
                x_1l
                ,(match+
-                 (x_2l ,(mk-CMD- x_y x_z))
-                 (x_2r ,(mk-CMD+ x_2r ,(match+ () dummy-end))))))
-       (x_1r ,(mk-CMD- x_a x_b))))
+                 (x_2l ,(mk-CMD x_y x_z))
+                 (x_2r ,(mk-CMD x_2r ,(match+ () dummy-end))))))
+       (x_1r ,(mk-CMD x_a x_b))))
    dummy-end)
 
   (test-->>/BS
-   ,(mk-CMD-
+   ,(mk-CMD
      ,(match-
        x_0 x_1
-       ,(mk-CMD-
-         ,(match- [] ,(mk-CMD- ,(match- [] dummy-end) x_1))
+       ,(mk-CMD
+         ,(match- [] ,(mk-CMD ,(match- [] dummy-end) x_1))
          x_0))
      [duo [] []])
    dummy-end)
@@ -1121,8 +1121,8 @@
                          (prettify "[" c_1 ", " c_2 "]")])]
          ['cmd (match-λ [(list _ _ p ⇒ c _)
                          (prettify p ⇒ c)])]
-         ['CMD (match-λ [(list _ _ P ⇒ κ C _)
-                         (prettify P ⇒ (text (symbol->string (lw-e κ)) (cons 'superscript (default-style))) " " C)])]
+         ['CMD (match-λ [(list _ _ P ⇒ C _)
+                         (prettify P ⇒ C)])]
          ['▽var (match-λ [(list _ _ x τ _)
                          (prettify x " : " τ)]
                         [(list _ _ x τ ρ _)
