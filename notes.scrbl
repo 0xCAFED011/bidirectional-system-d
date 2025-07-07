@@ -275,6 +275,21 @@ is a means of matching on the structure of continuations.
         (judgment-form->pict base:kind-type)))))
 }
 
+@(define fig:type-equal (make-tag))
+@figure[fig:type-equal
+        @elem{Kind-indexed type equality.@(linebreak)@(base:pretty-term (type-equal τ τ κ))}]{
+ @(base:with-my-rewriters
+   (λ ()
+     (hb-append
+      20
+      (parameterize
+         ([judgment-form-cases '("𝟘_≡" "𝟙_≡" "⊗_≡" "⊕_≡" "⊖_≡" "↓_≡" "⇑_≡")])
+        (judgment-form->pict base:type-equal))
+      (parameterize
+         ([judgment-form-cases '("⊤_≡" "⊥_≡" "⅋_≡" "&_≡" "¬_≡" "↑_≡" "⇓_≡")])
+        (judgment-form->pict base:type-equal)))))
+}
+
 
 @(define fig:whole-elab-binding (make-tag))
 @figure[fig:whole-elab-binding

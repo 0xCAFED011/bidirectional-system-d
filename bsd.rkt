@@ -6,6 +6,7 @@
          BS-exec
          BS-elab
          kind-type
+         kind-equal
          type-equal
          extend-bindings/check
          extend-bindings/synth
@@ -315,57 +316,83 @@
   #:mode (type-equal I I I)
   #:contract (type-equal τ τ κ)
 
-  [-----------
+  [----------- "𝟘_≡"
    (type-equal 𝟘 𝟘 +)]
 
-  [-----------
+  [----------- "𝟙_≡"
    (type-equal 𝟙 𝟙 +)]
 
   [(type-equal τ_1 τ_1′ +) (type-equal τ_2 τ_2 +)
-   -----------
+   ----------- "⊗_≡"
    (type-equal (τ_1 ⊗ τ_2) (τ_1′ ⊗ τ_2′) +)]
 
   [(type-equal τ_l τ_l′ +) (type-equal τ_r τ_r′ +)
-   -----------
+   ----------- "⊕_≡"
    (type-equal (τ_l ⊕ τ_r) (τ_l′ ⊕ τ_r′) +)]
 
   [(type-equal τ τ_′ -)
-   -----------
+   ----------- "⊖_≡"
    (type-equal (⊖ τ) (⊖ τ_′) +)]
 
   [(type-equal τ τ_′ -)
-   -----------
+   ----------- "↓_≡"
    (type-equal (↓ τ) (↓ τ_\′) +)]
 
   [(type-equal τ τ_′ +)
-   -----------
+   ----------- "⇑_≡"
    (type-equal (⇑ τ) (⇑ τ_′) -)]
 
-  [-----------
+  [----------- "⊥_≡"
    (type-equal ⊤ ⊤ -)]
 
-  [-----------
+  [----------- "⊤_≡"
    (type-equal ⊥ ⊥ -)]
 
   [(type-equal τ_1 τ_1′ -) (type-equal τ_2 τ_2′ -)
-   -----------
+   ----------- "⅋_≡"
    (type-equal (τ_1 ⅋ τ_2) (τ_1′ ⅋ τ_2′) -)]
 
   [(type-equal τ_l τ_l′ -) (type-equal τ_r τ_r′ -)
-   -----------
+   ----------- "&_≡"
    (type-equal (τ_l & τ_r) (τ_l′ & τ_r′) -)]
 
   [(type-equal τ τ_′ +)
-   -----------
+   ----------- "¬_≡"
    (type-equal (¬ τ) (¬ τ_′) -)]
 
   [(type-equal τ τ_′ +)
-   -----------
+   ----------- "↑_≡"
    (type-equal (↑ τ) (↑ τ_′) -)]
 
   [(type-equal τ τ_′ -)
-   -----------
+   ----------- "⇓_≡"
    (type-equal (⇓ τ) (⇓ τ_′) +)])
+
+(module+ test
+
+  (define-syntax-rule (test-type-refl k ty)
+    (test-judgment-holds (type-equal ty ty k)))
+
+  (test-type-refl + (𝟘 ⊗ 𝟙))
+
+  (test-type-refl + (𝟙 ⊕ 𝟙))
+
+  (test-type-refl + (𝟙 ⊕ (𝟙 ⊕ 𝟘)))
+
+  (test-type-refl + ((𝟙 ⊗ 𝟙) ⊕ (𝟙 ⊗ (𝟙 ⊗ 𝟙))))
+
+  (test-type-refl + ((⊖ ⊥) ⊗ 𝟙))
+
+  (test-type-refl + (𝟙 ⊗ (↓ ((¬ 𝟙) ⅋ ⊥))))
+
+  (test-type-refl - (⊥ ⅋ ⊥))
+
+  (test-type-refl - (⊤ & ⊤))
+
+  (test-type-refl - (((⊤ & ⊤) & ⊤) & (⊤ & (⊤ & ⊤))))
+
+  (test-type-refl - ((¬ 𝟙) ⅋ ⊥))
+  )
 
   
 
