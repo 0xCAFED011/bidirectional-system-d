@@ -101,51 +101,51 @@ of as folding the consumer and cut forms together.
 We begin with a small core of System@|~|D. The language includes some familiar types:
 
 @itemlist[
- @item{zero (empty): @(base:pretty-term 𝟘)}
- @item{one (unit): @(base:pretty-term 𝟙)}
- @item{pairs: @(base:pretty-term (τ ⊗ τ))}
- @item{sums: @(base:pretty-term (τ ⊕ τ))}]
+ @item{zero (empty): @base:pretty-term[𝟘]}
+ @item{one (unit): @base:pretty-term[𝟙]}
+ @item{pairs: @base:pretty-term[(τ ⊗ τ)]}
+ @item{sums: @base:pretty-term[(τ ⊕ τ)]}]
 
 And the corresponding producers, being primitive constructors:
 
 @itemlist[
  @item{no constructor for empty type}
- @item{unit constructor: @(base:pretty-term ())}
- @item{pair constructor: @(base:pretty-term (pair w w))}
- @item{left and right injections: @(base:pretty-term (ιl w)) and @(base:pretty-term (ιr w))}]
+ @item{unit constructor: @base:pretty-term[()]}
+ @item{pair constructor: @base:pretty-term[(pair w w)]}
+ @item{left and right injections: @base:pretty-term[(ιl w)] and @base:pretty-term[(ιr w)]}]
 
 And the corresponding consumers, being primitive pattern-matching forms:
 
 @itemlist[
- @item{``absurd'' match for zero @(base:pretty-term {𝟘})}
- @item{match on unit @(base:pretty-term {() ↦ k})}
- @item{match on pair: @(base:pretty-term {(pair χ χ) ↦ k})}
- @item{match on injections: @(base:pretty-term {(ιl χ) ↦ k \| (ιr χ) ↦ k})}]
+ @item{``absurd'' match for zero @base:pretty-term[{𝟘}]}
+ @item{match on unit @base:pretty-term[{() ↦ k}]}
+ @item{match on pair: @base:pretty-term[{(pair χ χ) ↦ k}]}
+ @item{match on injections: @base:pretty-term[{(ιl χ) ↦ k \| (ιr χ) ↦ k}]}]
 
-And, finally, it contains a command form, @(base:pretty-term [cmd p ⇒ c]), found in the body of
+And, finally, it contains a command form, @base:pretty-term[[cmd p ⇒ c]], found in the body of
 matching forms (abbreviated @(base:pretty-term k)). It is within a command, joining a producer and
 a consumer, that computation occurs. By using these terms, we can build and deconstruct nonrecursive
 algebraic data types. Here is what commands could look like, for specific types:
 
 @itemlist[
- @item{@(base:pretty-term 𝟙): @(base:pretty-term [cmd () ⇒ {() ↦ k}])}
- @item{@(base:pretty-term (τ ⊗ τ)): @(base:pretty-term [cmd (pair p p) ⇒ {(pair x_1 x_2) ↦ k}])}
- @item{@(base:pretty-term (τ ⊕ τ)): @(base:pretty-term [cmd (ιl p) ⇒ {(ιl x_l) ↦ k_l \| (ιr x_r) ↦ k_r}])}
+ @item{@base:pretty-term[𝟙]: @base:pretty-term[[cmd () ⇒ {() ↦ k}]]}
+ @item{@base:pretty-term[(τ ⊗ τ)]: @base:pretty-term[[cmd (pair p p) ⇒ {(pair x_1 x_2) ↦ k}]]}
+ @item{@base:pretty-term[(τ ⊕ τ)]: @base:pretty-term[[cmd (ιl p) ⇒ {(ιl x_l) ↦ k_l \| (ιr x_r) ↦ k_r}]]}
  ]
 
 Sometimes, we want to bind a value to a variable, so as to make an expression concise, or so that
-the value can be used multiple times. This is done with the ``let'' form: @(base:pretty-term {let/P χ ↦ k}).
+the value can be used multiple times. This is done with the ``let'' form: @base:pretty-term[{let/P χ ↦ k}].
 Notice how the syntax of programs makes the control flow explicit, and the next step of computation
 can always be found, immediately.
 
-A note about forms which bind variables: a binding, @(base:pretty-term χ), is rather flexible,
+A note about forms which bind variables: a binding, @base:pretty-term[χ], is rather flexible,
 and offers some choices
 
 @itemlist[
- @item{a bare variable: @(base:pretty-term x)}
- @item{a variable with type annotation: @(base:pretty-term (var x τ κ))}
- @item{a variable with type and usage annotations: @(base:pretty-term (var x τ κ ρ))}
- @item{a non-binding, with type annotation: @(base:pretty-term (nope τ κ))}
+ @item{a bare variable: @base:pretty-term[x]}
+ @item{a variable with type annotation: @base:pretty-term[(var x τ κ)]}
+ @item{a variable with type and usage annotations: @base:pretty-term[(var x τ κ ρ)]}
+ @item{a non-binding, with type annotation: @base:pretty-term[(nope τ κ)]}
  ]
 
 For a variable, omitted type and/or usage annotations can be completely synthesized (inferred),
@@ -168,68 +168,80 @@ This implies that consumers may be more involved than the straightforward patter
 seen thus far. Indeed, if we can describe ending a program via a command with an abstract consumer,
 then it must be possible for consumers to be bound to variables. And, if a consumer can be bound to
 a variable, then there must be a corresponding binding form, no? Indeed, there is:
-@(base:pretty-term {let/C χ ↦ k}), a mirror-image of the previously-described let-form. Using this form,
+@base:pretty-term[{let/C χ ↦ k}], a mirror-image of the previously-described let-form. Using this form,
 we can abstract over consumers.
 
 As an example, here we abstract over a matching consumer:
 
 @centered{
- @(base:pretty-term
+ @base:pretty-term[
    [cmd {let/C (var x_match 𝟙 +) ↦ [cmd () ⇒ x_match]}
     ⇒
-    {() ↦ k}])
+    {() ↦ k}]]
 }
 
 At this point, there are some questions implied by what we've seen thus far... What are the funny
-annotations (@(base:pretty-term κ)) that accompany types? What does it mean to abstract over consumers?
+annotations (@base:pretty-term[κ]) that accompany types? What does it mean to abstract over consumers?
 Can a let-fom abstract over another let-form? These questions lead us into the expressivity and nuance
 of System@|~|D, but, thankfully, we can use concepts from other languages to develop an intuition of
 what's going on here.
 
-Let's begin with the annotations, disregarding usage. The extra bit, (@(base:pretty-term κ)) is a @emph{kind}
+Let's begin with the annotations, disregarding usage. The extra bit, (@base:pretty-term[κ]) is a @emph{kind}
 annotation. This may seem odd: after all, the title specifies that this language is monomorphic, so
 there musn't be any higher-kinded types. Since that's the case, why bother with mentioning kinds?
 As it turns out, the set of types is richer than described above---in fact, there are twice as many types.
 This is because System@|~|D has the special property of allowing a deep exploration of @emph{duality};
 de@|~|Morgan duality, to be precise.
 
-The previously-described types were all of kind @(base:pretty-term +). The second set of types are of
-kind @(base:pretty-term -), each counterpart to a previous type:
+The previously-described types were all of kind @base:pretty-term[+], thus called @emph{positive}.
+The second set of types are of kind @(base:pretty-term -) (@emph{negative}), each being counterpart
+to a previously-mentioned type:
 
 @itemlist[
- @item{top, @(base:pretty-term ⊤), dual to @(base:pretty-term 𝟘)}
- @item{bottom, @(base:pretty-term ⊥), dual to @(base:pretty-term 𝟙)}
- @item{par, @(base:pretty-term (τ ⅋ τ)), dual to @(base:pretty-term (τ ⊗ τ))}
- @item{with, @(base:pretty-term (τ & τ)) dual to @(base:pretty-term (τ ⊕ τ))}
+ @item{top, @base:pretty-term[⊤], dual to @base:pretty-term[𝟘]}
+ @item{bottom, @base:pretty-term[⊥], dual to @base:pretty-term[𝟙]}
+ @item{par, @base:pretty-term[(τ ⅋ τ)], dual to @base:pretty-term[(τ ⊗ τ)]}
+ @item{with, @base:pretty-term[(τ & τ)] dual to @base:pretty-term[(τ ⊕ τ)]}
  ]
 
 The duality of types is demonstrated by both their logical meanings and by the terms associated with them.
-For example, whereas @(base:pretty-term 𝟘) is an empty type, corresponding to a vacuous falsity, and
-@(base:pretty-term 𝟙) is a singleton type, corresponding to trivial truth; @(base:pretty-term ⊤) is an
-empty type, corresponding to vacuous truth, and @(base:pretty-term ⊥) is a singleton type, corresponding
+For example, whereas @base:pretty-term[𝟘] is an empty type, corresponding to a vacuous falsity, and
+@base:pretty-term[𝟙] is a singleton type, corresponding to trivial truth; @base:pretty-term[⊤] is an
+empty type, corresponding to vacuous truth, and @base:pretty-term[⊥] is a singleton type, corresponding
 to trivial falsity. 
 
 As before, each type has associated producers (sometimes called copattern-matches @~cite[bib:copatterns]):
 
 @itemlist[
- @item{absurd match on top: @(base:pretty-term {⊤})}
- @item{match on bottom: @(base:pretty-term {⊥ ↦ k})}
- @item{match on par: @(base:pretty-term {[duo χ_1 χ_2] ↦ k})}
- @item{match on with: @(base:pretty-term {[πl χ_l] ↦ k_l \| [πr χ_r] ↦ k_r})}
+ @item{absurd match on top: @base:pretty-term[{⊤}]}
+ @item{match on bottom: @base:pretty-term[{⊥ ↦ k}]}
+ @item{match on par: @base:pretty-term[{[duo χ_1 χ_2] ↦ k}]}
+ @item{match on with: @base:pretty-term[{[πl χ_l] ↦ k_l \| [πr χ_r] ↦ k_r}]}
  ]
 
 And, consumers (sometimes called destructors or observations):
 
 @itemlist[
  @item{no consumer for top}
- @item{bottom destructor: @(base:pretty-term ⊥)}
- @item{with-destructors: @(base:pretty-term [duo f f])}
- @item{left and right projections: @(base:pretty-term [πl f]) and @(base:pretty-term [πr f])}
+ @item{bottom destructor: @base:pretty-term[⊥]}
+ @item{with-destructors: @base:pretty-term[[duo f f]]}
+ @item{left and right projections: @base:pretty-term[[πl f]] and @base:pretty-term[[πr f]]}
  ]
 
 The copattern-matching forms can be thought of as processes that are waiting on a request and respond
 according to its structure. A more provocative, yet accurate, perspective is that copattern-matching
-is a means of matching on the structure of continuations.
+is a means of matching on the structure of continuations. Although this may seem strange, when coming
+from a background of functional programming, we can recover some intuition about how these contructs
+work, thanks, in part, to their nature as duals to the positive types.
+
+Let's begin with @base:pretty-term[&]. It is dual to the disjoint sum, @base:pretty-term[⊕], and is,
+precisely, a disjoint product---although, a more familiar term would be @emph{projective product}.
+However, as we can see, given the producer is a matching construct, it's more accurate to view the
+@base:pretty-term[&] connective as a pure object and its methods. If you are familiar with the
+``codata record'' type in Agda, then you already have seen this connective in action.
+
+Now, the situation for @base:pretty-term[⅋] is more difficult to explain, because nothing like it is
+found in popular functional programming languages or proof-assistants based on dependent lambda-calculi.
 
 
 
