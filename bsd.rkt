@@ -6,27 +6,27 @@
          BS-exec
          BS-elab
          kind-type
-         kind-equal
-         type-equal
-         extend-bindings
+         kind-=
+         type-=
+         bindings-snoc
          var-check
          var-synth
          elaborate-binding/check
          elaborate-binding/synth
          requirements-mul
          requirements-add
-         usage-equal
-         usage-add
+         usage-=
+         usage-+
          usage-max
          cut
-         synth-consumer
-         focused-synth-consumer
-         check-producer
-         focused-check-producer
-         synth-producer
-         focused-synth-producer
-         check-consumer
-         focused-check-consumer
+         △consumer
+         focused-△consumer
+         ▽producer
+         focused-▽producer
+         △producer
+         focused-△producer
+         ▽consumer
+         focused-▽consumer
          maybe-substitute
          maybe-substitute2
          red/BS)
@@ -125,7 +125,7 @@
 (define-extended-language BS-elab BS-exec
   [χ ::= ▽χ △χ]
   [ξ binding-context ::= (ψ ...)]
-  [ψ variable-binding ::= (bound/check x o) (bound/synth x o τ κ)]
+  [ψ variable-binding ::= (▽bound x o) (△bound x o τ κ)]
   [o orientation ::= prod con]
   [Ξ requirements ::= ∅ (Ψ ...)]
   [Ψ variable-requirement ::= (req x o τ κ ρ)])
@@ -137,85 +137,102 @@
   #:mode (var-check I I I)
   #:contract (var-check x o ξ)
 
-  [(var-check x o (_ ... (bound/check x o) _ ...))])
+  [(var-check x o (_ ... (▽bound x o) _ ...))])
 
 (define-judgment-form BS-elab
   #:mode (var-synth I I O O I)
   #:contract (var-synth x o τ κ ξ)
 
-  [(var-synth x o τ κ (_ ... (bound/synth x o τ κ) _ ...))])
+  [(var-synth x o τ κ (_ ... (△bound x o τ κ) _ ...))])
 
 
 (define-judgment-form BS-elab
-  #:mode (valid-bind/check I I)
-  #:contract (valid-bind/check ▽χ κ)
+  #:mode (valid-▽bind I I)
+  #:contract (valid-▽bind ▽χ κ)
 
-  [-----------------
-   (valid-bind/check x κ)]
-
-  [(kind-type τ κ)
-   -----------------
-   (valid-bind/check (▽var x τ) κ)]
+  [------------
+   (valid-▽bind x κ)]
 
   [(kind-type τ κ)
-   -----------------
-   (valid-bind/check (▽var x τ ρ) κ)]
+   ------------
+   (valid-▽bind (▽var x τ) κ)]
 
   [(kind-type τ κ)
-   -----------------
-   (valid-bind/check (nope τ) κ)])
+   ------------
+   (valid-▽bind (▽var x τ ρ) κ)]
+
+  [(kind-type τ κ)
+   ------------
+   (valid-▽bind (nope τ) κ)])
 
 
 (define-judgment-form BS-elab
-  #:mode (valid-bind/synth I)
-  #:contract (valid-bind/synth △χ)
+  #:mode (valid-△bind I)
+  #:contract (valid-△bind △χ)
 
   [(kind-type τ κ)
-   -----------------
-   (valid-bind/synth (△var x τ κ))]
+   ------------
+   (valid-△bind (△var x τ κ))]
 
   [(kind-type τ κ)
-   -----------------
-   (valid-bind/synth (△var x τ κ ρ))]
+   ------------
+   (valid-△bind (△var x τ κ ρ))]
 
   [(kind-type τ κ)
-   -----------------
-   (valid-bind/synth (nope x τ κ))])
+   ------------
+   (valid-△bind (nope x τ κ))])
 
 
 (define-metafunction BS-elab
-  extend-bindings : ξ χ o -> ξ
-  [(extend-bindings (ψ ...) x o) (ψ ... (bound/check x o))]
-  [(extend-bindings (ψ ...) (▽var x τ) o) (ψ ... (bound/check x o))]
-  [(extend-bindings (ψ ...) (▽var x τ ρ) o) (ψ ... (bound/check x o))]
-  [(extend-bindings ξ (nope τ) o) ξ]
-  [(extend-bindings (ψ ...) (△var x τ κ) o) (ψ ... (bound/synth x o τ κ))]
-  [(extend-bindings (ψ ...) (△var x τ κ ρ) o) (ψ ... (bound/synth x o τ κ))]
-  [(extend-bindings ξ (nope τ κ) o) ξ])
+  bindings-snoc : ξ χ o -> ξ
+
+  [(bindings-snoc (ψ ...) x o) (ψ ... (▽bound x o))]
+  [(bindings-snoc (ψ ...) (▽var x τ) o) (ψ ... (▽bound x o))]
+  [(bindings-snoc (ψ ...) (▽var x τ ρ) o) (ψ ... (▽bound x o))]
+  [(bindings-snoc ξ (nope τ) o) ξ]
+  [(bindings-snoc (ψ ...) (△var x τ κ) o) (ψ ... (△bound x o τ κ))]
+  [(bindings-snoc (ψ ...) (△var x τ κ ρ) o) (ψ ... (△bound x o τ κ))]
+  [(bindings-snoc ξ (nope τ κ) o) ξ])
 
 
 
 (define-judgment-form BS-elab
-  #:mode (usage-equal I I)
-  #:contract (usage-equal ρ ρ)
+  #:mode (usage-= I I)
+  #:contract (usage-= ρ ρ)
 
   [------------
-   (usage-equal 1 1)]
+   (usage-= 1 1)]
 
   [------------
-   (usage-equal ω ω)])
+   (usage-= ω ω)])
+
+(define-judgment-form BS-elab
+  #:mode (usage-< I I)
+  #:contract (usage-< ρ ρ)
+
+  [--------
+   (usage-< 1 ω)])
 
 
 (define-metafunction BS-elab
-  usage-add : ρ ρ -> ρ
-  [(usage-add 1 1) ω]
-  [(usage-add ω 1) ω]
-  [(usage-add 1 ω) ω]
-  [(usage-add ω ω) ω])
+  usage-+ : ρ ρ -> ρ
+
+  [(usage-+ 1 1) ω]
+  [(usage-+ ω 1) ω]
+  [(usage-+ 1 ω) ω]
+  [(usage-+ ω ω) ω])
+
+(define-metafunction BS-elab
+  usage-× : ρ ρ -> ρ
+
+  [(usage-× 1 1) 1]
+  [(usage-× ω 1) ω]
+  [(usage-× 1 ω) ω]
+  [(usage-× ω ω) ω])
   
-
 (define-metafunction BS-elab
   usage-max : ρ ρ -> ρ
+
   [(usage-max 1 1) 1]
   [(usage-max 1 ω) ω]
   [(usage-max ω 1) ω]
@@ -224,21 +241,23 @@
 
 (define-metafunction BS-elab
   requirements-mul : Ξ Ξ -> Ξ
+
   [(requirements-mul ∅ Ξ) ∅]
   [(requirements-mul Ξ ∅) ∅]
   [(requirements-mul (Ψ_l1 ... (req x o τ_l κ_l ρ_l) Ψ_l2 ...) (Ψ_r1 ... (req x o τ_r κ_r ρ_r) Ψ_r2 ...))
-   (requirements-mul (Ψ_l1 ... Ψ_l2 ...) (Ψ_r1 ... (req x o τ_l κ_l (usage-add ρ_l ρ_r)) Ψ_r2 ...))
-   (judgment-holds (type-equal τ_l τ_r κ_l))]
+   (requirements-mul (Ψ_l1 ... Ψ_l2 ...) (Ψ_r1 ... (req x o τ_l κ_l (usage-+ ρ_l ρ_r)) Ψ_r2 ...))
+   (judgment-holds (type-= τ_l τ_r κ_l))]
   [(requirements-mul (Ψ_l ...) (Ψ_r ...)) (Ψ_l ... Ψ_r ...)])
 
 
 (define-metafunction BS-elab
   requirements-add : Ξ Ξ -> Ξ
+
   [(requirements-add ∅ Ξ) Ξ]
   [(requirements-add Ξ ∅) Ξ]
   [(requirements-add (Ψ_l1 ... (req x o τ_l κ_l ρ_l) Ψ_l2 ...) (Ψ_r1 ... (req x o τ_r κ_r ρ_r) Ψ_r2 ...))
    (requirements-add (Ψ_l1 ... Ψ_l2 ...) (Ψ_r1 ... (req x o τ_l κ_l (usage-max ρ_l ρ_r)) Ψ_r2 ...))
-   (judgment-holds (type-equal τ_l τ_r κ_l))]
+   (judgment-holds (type-= τ_l τ_r κ_l))]
   [(requirements-add (Ψ_l ...) (Ψ_r ...)) (Ψ_l ... Ψ_r ...)])
 
 
@@ -322,76 +341,76 @@
 
 
 (define-judgment-form BS-elab
-  #:mode (kind-equal I I)
-  #:contract (kind-equal κ κ)
+  #:mode (kind-= I I)
+  #:contract (kind-= κ κ)
 
-  [-----------
-   (kind-equal + +)]
+  [-------
+   (kind-= + +)]
 
-  [-----------
-   (kind-equal - -)])
+  [-------
+   (kind-= - -)])
 
 
 (define-judgment-form BS-elab
-  #:mode (type-equal I I I)
-  #:contract (type-equal τ τ κ)
+  #:mode (type-= I I I)
+  #:contract (type-= τ τ κ)
 
-  [----------- "𝟘_≡"
-   (type-equal 𝟘 𝟘 +)]
+  [------- "𝟘_="
+   (type-= 𝟘 𝟘 +)]
 
-  [----------- "𝟙_≡"
-   (type-equal 𝟙 𝟙 +)]
+  [------- "𝟙_="
+   (type-= 𝟙 𝟙 +)]
 
-  [(type-equal τ_1 τ_1′ +) (type-equal τ_2 τ_2 +)
-   ----------- "⊗_≡"
-   (type-equal (τ_1 ⊗ τ_2) (τ_1′ ⊗ τ_2′) +)]
+  [(type-= τ_1 τ_1′ +) (type-= τ_2 τ_2 +)
+   ------- "⊗_="
+   (type-= (τ_1 ⊗ τ_2) (τ_1′ ⊗ τ_2′) +)]
 
-  [(type-equal τ_l τ_l′ +) (type-equal τ_r τ_r′ +)
-   ----------- "⊕_≡"
-   (type-equal (τ_l ⊕ τ_r) (τ_l′ ⊕ τ_r′) +)]
+  [(type-= τ_l τ_l′ +) (type-= τ_r τ_r′ +)
+   ------- "⊕_="
+   (type-= (τ_l ⊕ τ_r) (τ_l′ ⊕ τ_r′) +)]
 
-  [(type-equal τ τ_′ -)
-   ----------- "⊖_≡"
-   (type-equal (⊖ τ) (⊖ τ_′) +)]
+  [(type-= τ τ_′ -)
+   ------- "⊖_="
+   (type-= (⊖ τ) (⊖ τ_′) +)]
 
-  [(type-equal τ τ_′ -)
-   ----------- "↓_≡"
-   (type-equal (↓ τ) (↓ τ_\′) +)]
+  [(type-= τ τ_′ -)
+   ------- "↓_="
+   (type-= (↓ τ) (↓ τ_\′) +)]
 
-  [(type-equal τ τ_′ +)
-   ----------- "⇑_≡"
-   (type-equal (⇑ τ) (⇑ τ_′) -)]
+  [(type-= τ τ_′ +)
+   ------- "⇑_="
+   (type-= (⇑ τ) (⇑ τ_′) -)]
 
-  [----------- "⊥_≡"
-   (type-equal ⊤ ⊤ -)]
+  [------- "⊥_="
+   (type-= ⊤ ⊤ -)]
 
-  [----------- "⊤_≡"
-   (type-equal ⊥ ⊥ -)]
+  [------- "⊤_="
+   (type-= ⊥ ⊥ -)]
 
-  [(type-equal τ_1 τ_1′ -) (type-equal τ_2 τ_2′ -)
-   ----------- "⅋_≡"
-   (type-equal (τ_1 ⅋ τ_2) (τ_1′ ⅋ τ_2′) -)]
+  [(type-= τ_1 τ_1′ -) (type-= τ_2 τ_2′ -)
+   ------- "⅋_="
+   (type-= (τ_1 ⅋ τ_2) (τ_1′ ⅋ τ_2′) -)]
 
-  [(type-equal τ_l τ_l′ -) (type-equal τ_r τ_r′ -)
-   ----------- "&_≡"
-   (type-equal (τ_l & τ_r) (τ_l′ & τ_r′) -)]
+  [(type-= τ_l τ_l′ -) (type-= τ_r τ_r′ -)
+   ------- "&_="
+   (type-= (τ_l & τ_r) (τ_l′ & τ_r′) -)]
 
-  [(type-equal τ τ_′ +)
-   ----------- "¬_≡"
-   (type-equal (¬ τ) (¬ τ_′) -)]
+  [(type-= τ τ_′ +)
+   ------- "¬_="
+   (type-= (¬ τ) (¬ τ_′) -)]
 
-  [(type-equal τ τ_′ +)
-   ----------- "↑_≡"
-   (type-equal (↑ τ) (↑ τ_′) -)]
+  [(type-= τ τ_′ +)
+   ------- "↑_="
+   (type-= (↑ τ) (↑ τ_′) -)]
 
-  [(type-equal τ τ_′ -)
-   ----------- "⇓_≡"
-   (type-equal (⇓ τ) (⇓ τ_′) +)])
+  [(type-= τ τ_′ -)
+   ------- "⇓_="
+   (type-= (⇓ τ) (⇓ τ_′) +)])
 
 (module+ test
 
   (define-syntax-rule (test-type-refl k ty)
-    (test-judgment-holds (type-equal ty ty k)))
+    (test-judgment-holds (type-= ty ty k)))
 
   (test-type-refl + (𝟘 ⊗ 𝟙))
 
@@ -419,15 +438,15 @@
   #:mode (elaborate-binding/check I I O O O I)
   #:contract (elaborate-binding/check Ξ ▽χ Ξ X τ κ)
 
-  [(kind-equal κ κ_′)
+  [(kind-= κ κ_′)
    ------------------------
    (elaborate-binding/check (Ψ_1 ... (req x o τ κ_′ ρ) Ψ_2 ...) x (Ψ_1 ... Ψ_2 ...) x τ κ)]
 
-  [(kind-equal κ κ_′) (type-equal τ τ_′ κ)
+  [(kind-= κ κ_′) (type-= τ τ_′ κ)
    ------------------------
    (elaborate-binding/check (Ψ_1 ... (req x o τ_′ κ_′ ρ) Ψ_2 ...) (▽var x τ) (Ψ_1 ... Ψ_2 ...) x τ κ)]
   
-  [(kind-equal κ κ_′) (type-equal τ τ_′ κ) (usage-equal ρ ρ_′)
+  [(kind-= κ κ_′) (type-= τ τ_′ κ) (usage-= ρ ρ_′)
    ------------------------
    (elaborate-binding/check (Ψ_1 ... (req x o τ_′ κ_′ ρ_′) Ψ_2 ...) (▽var x τ ρ) (Ψ_1 ... Ψ_2 ...) x τ κ)]
 
@@ -441,11 +460,11 @@
   [------------------
    (elaborate-binding/synth Ξ (nope τ κ) Ξ none τ κ)]
 
-  [(kind-equal κ κ_′) (type-equal τ_′ τ κ)
+  [(kind-= κ κ_′) (type-= τ_′ τ κ)
    ------------------
    (elaborate-binding/synth (Ψ_1 ... (req x o τ_′ κ_′ ρ) Ψ_n ...) (△var x τ κ) (Ψ_1 ... Ψ_n ...) x τ κ)]
 
-  [(kind-equal κ κ_′) (type-equal τ_′ τ κ) (usage-equal ρ_′ ρ)
+  [(kind-= κ κ_′) (type-= τ_′ τ κ) (usage-= ρ_′ ρ)
    ------------------
    (elaborate-binding/synth (Ψ_1 ... (req x o τ_′ κ_′ ρ_′) Ψ_n ...) (△var x τ κ ρ) (Ψ_1 ... Ψ_n ...) x τ κ)])
 
@@ -455,39 +474,39 @@
   #:mode (cut I I O O)
   #:contract (cut ξ k Ξ K)
 
-  [(synth-consumer ξ c Ξ_1 C τ κ) (check-producer ξ p τ κ Ξ_2 P)
+  [(△consumer ξ c Ξ_1 C τ κ) (▽producer ξ p τ κ Ξ_2 P)
    ----
    (cut ξ [cmd p ⇒ c] (requirements-mul Ξ_1 Ξ_2) [CMD P ⇒ C])]
 
-  [(synth-producer ξ p Ξ_1 P τ κ) (check-consumer ξ c τ κ Ξ_2 C)
+  [(△producer ξ p Ξ_1 P τ κ) (▽consumer ξ c τ κ Ξ_2 C)
    ----
    (cut ξ [cmd p ⇒ c] (requirements-mul Ξ_1 Ξ_2) [CMD P ⇒ C])])
 
   
 
 (define-judgment-form BS-elab
-  #:mode (synth-consumer I I O O O O)
-  #:contract (synth-consumer ξ c Ξ C τ κ)
+  #:mode (△consumer I I O O O O)
+  #:contract (△consumer ξ c Ξ C τ κ)
 
-  [(valid-bind/check ▽χ κ) (cut (extend-bindings ξ ▽χ prod) k Ξ K) (elaborate-binding/check Ξ ▽χ Ξ_′ X τ κ)
-   --------------- "△let_P"
-   (synth-consumer ξ {let/P ▽χ κ ↦ k} Ξ_′ {let/P X ↦ K} τ +)]
+  [(valid-▽bind ▽χ κ) (cut (bindings-snoc ξ ▽χ prod) k Ξ K) (elaborate-binding/check Ξ ▽χ Ξ_′ X τ κ)
+   ----------"△let_P"
+   (△consumer ξ {let/P ▽χ κ ↦ k} Ξ_′ {let/P X ↦ K} τ +)]
 
-  [(focused-synth-consumer ξ f Ξ F τ κ)
-   --------------- "F_△C"
-   (synth-consumer ξ f Ξ F τ κ)])
+  [(focused-△consumer ξ f Ξ F τ κ)
+   ---------- "F_△C"
+   (△consumer ξ f Ξ F τ κ)])
 
 (module+ test
 
   (test-judgment-holds
-   (synth-consumer
-    ((bound/synth x_1 con 𝟙 +)) {let/P x_2 + ↦ [cmd x_2 ⇒ x_1]}
+   (△consumer
+    ((△bound x_1 con 𝟙 +)) {let/P x_2 + ↦ [cmd x_2 ⇒ x_1]}
     ((req x_1 con 𝟙 + 1)) {let/P x_2 ↦ [CMD x_2 ⇒ x_1]}
     𝟙 +))
 
   (test-judgment-holds
-   (synth-consumer
-    ((bound/synth x_1 con (𝟙 ⊗ 𝟙) +)) {let/P x_2 + ↦ [cmd (pair x_2 x_2) ⇒ x_1]}
+   (△consumer
+    ((△bound x_1 con (𝟙 ⊗ 𝟙) +)) {let/P x_2 + ↦ [cmd (pair x_2 x_2) ⇒ x_1]}
     ((req x_1 con (𝟙 ⊗ 𝟙) + 1)) {let/P x_2 ↦ [CMD (pair x_2 x_2) ⇒ x_1]}
     𝟙 +))
   )
@@ -495,188 +514,188 @@
 
 
 (define-judgment-form BS-elab
-  #:mode (focused-synth-consumer I I O O O O)
-  #:contract (focused-synth-consumer ξ f Ξ F τ κ)
+  #:mode (focused-△consumer I I O O O O)
+  #:contract (focused-△consumer ξ f Ξ F τ κ)
 
   [(var-synth x con τ κ ξ)
-   ----------------------- "△Var_C"
-   (focused-synth-consumer ξ x ((req x con τ κ 1)) x τ κ)]
+   ------------------ "△Var_C"
+   (focused-△consumer ξ x ((req x con τ κ 1)) x τ κ)]
   
-  [----------------------- "𝟘_C"
-   (focused-synth-consumer ξ {𝟘} ∅ {𝟘} 𝟘 +)]
+  [------------------ "𝟘_C"
+   (focused-△consumer ξ {𝟘} ∅ {𝟘} 𝟘 +)]
   
   [(cut ξ k Ξ K)
-   ----------------------- "𝟙_C"
-   (focused-synth-consumer ξ {() ↦ k} Ξ {() ↦ K} 𝟙 +)]
+   ------------------ "𝟙_C"
+   (focused-△consumer ξ {() ↦ k} Ξ {() ↦ K} 𝟙 +)]
 
-  [(valid-bind/check ▽χ_1 +) (valid-bind/check ▽χ_2 +) (cut (extend-bindings (extend-bindings ξ ▽χ_1 prod) ▽χ_2 prod) k Ξ K)
+  [(valid-▽bind ▽χ_1 +) (valid-▽bind ▽χ_2 +) (cut (bindings-snoc (bindings-snoc ξ ▽χ_1 prod) ▽χ_2 prod) k Ξ K)
    (elaborate-binding/check Ξ ▽χ_1 Ξ_′ X_1 τ_1 +) (elaborate-binding/check Ξ_′ ▽χ_2 Ξ_′′ X_2 τ_2 +)
-   ----------------------- "⊗_C"
-   (focused-synth-consumer ξ {(pair ▽χ_1 ▽χ_2) ↦ k} Ξ_′′ {(pair X_1 X_2) ↦ K} (τ_1 ⊗ τ_2) +)]
+   ------------------ "⊗_C"
+   (focused-△consumer ξ {(pair ▽χ_1 ▽χ_2) ↦ k} Ξ_′′ {(pair X_1 X_2) ↦ K} (τ_1 ⊗ τ_2) +)]
 
-  [(valid-bind/check ▽χ_l +) (cut (extend-bindings ξ ▽χ_l prod) k_l Ξ_l K_l) (elaborate-binding/check Ξ_l ▽χ_l Ξ_l′ X_l τ_l +)
-   (valid-bind/check ▽χ_r +) (cut (extend-bindings ξ ▽χ_r prod) k_r Ξ_r K_r) (elaborate-binding/check Ξ_r ▽χ_r Ξ_r′ X_r τ_r +)
-   ----------------------- "⊕_C"
-   (focused-synth-consumer ξ {(ιl ▽χ_l) ↦ k_l \| (ιr ▽χ_r) ↦ k_r} (requirements-add Ξ_l′ Ξ_r′) {(ιl X_l) ↦ K_l \| (ιr X_r) ↦ K_r} (τ_l ⊕ τ_r) +)]
+  [(valid-▽bind ▽χ_l +) (cut (bindings-snoc ξ ▽χ_l prod) k_l Ξ_l K_l) (elaborate-binding/check Ξ_l ▽χ_l Ξ_l′ X_l τ_l +)
+   (valid-▽bind ▽χ_r +) (cut (bindings-snoc ξ ▽χ_r prod) k_r Ξ_r K_r) (elaborate-binding/check Ξ_r ▽χ_r Ξ_r′ X_r τ_r +)
+   ------------------ "⊕_C"
+   (focused-△consumer ξ {(ιl ▽χ_l) ↦ k_l \| (ιr ▽χ_r) ↦ k_r} (requirements-add Ξ_l′ Ξ_r′) {(ιl X_l) ↦ K_l \| (ιr X_r) ↦ K_r} (τ_l ⊕ τ_r) +)]
 
-  [(valid-bind/check ▽χ -) (cut (extend-bindings ξ ▽χ con) k Ξ K) (elaborate-binding/check Ξ ▽χ Ξ_′ X τ -)
-   ----------------------- "⊖_C"
-   (focused-synth-consumer ξ {(pack ▽χ) ↦ k} Ξ_′ {(pack X) ↦ K} (⊖ τ) +)]
+  [(valid-▽bind ▽χ -) (cut (bindings-snoc ξ ▽χ con) k Ξ K) (elaborate-binding/check Ξ ▽χ Ξ_′ X τ -)
+   ------------------ "⊖_C"
+   (focused-△consumer ξ {(pack ▽χ) ↦ k} Ξ_′ {(pack X) ↦ K} (⊖ τ) +)]
 
-  [(valid-bind/synth △χ) (cut (extend-bindings ξ △χ prod) k Ξ K) (elaborate-binding/synth Ξ △χ Ξ_′ X τ -)
-   ----------------------- "↓_C"
-   (focused-synth-consumer ξ {(dn △χ) ↦ k} Ξ_′ {(dn X) ↦ K} (↓ τ) +)]
+  [(valid-△bind △χ) (cut (bindings-snoc ξ △χ prod) k Ξ K) (elaborate-binding/synth Ξ △χ Ξ_′ X τ -)
+   ------------------ "↓_C"
+   (focused-△consumer ξ {(dn △χ) ↦ k} Ξ_′ {(dn X) ↦ K} (↓ τ) +)]
 
-  [(valid-bind/check ▽χ +) (cut (extend-bindings ξ ▽χ prod) k Ξ K) (elaborate-binding/check Ξ ▽χ Ξ_′ X τ +)
-   ----------------------- "⇑_C"
-   (focused-synth-consumer ξ {(⇑ ▽χ) ↦ k} Ξ_′ {(⇑ X) ↦ K} (⇑ τ) -)])
+  [(valid-▽bind ▽χ +) (cut (bindings-snoc ξ ▽χ prod) k Ξ K) (elaborate-binding/check Ξ ▽χ Ξ_′ X τ +)
+   ------------------ "⇑_C"
+   (focused-△consumer ξ {(⇑ ▽χ) ↦ k} Ξ_′ {(⇑ X) ↦ K} (⇑ τ) -)])
 
 (module+ test
   (test-judgment-holds
-   (focused-synth-consumer
+   (focused-△consumer
     () {𝟘}
     ∅ {𝟘} 𝟘 +))
 
   (test-judgment-holds
-   (focused-synth-consumer
-    ((bound/check x_1 prod) (bound/check x_2 con)) {𝟘}
+   (focused-△consumer
+    ((▽bound x_1 prod) (▽bound x_2 con)) {𝟘}
     ∅ {𝟘} 𝟘 +))
 
   (test-judgment-holds
-   (focused-synth-consumer
-    ((bound/check x_1 prod) (bound/synth x_2 con 𝟙 +)) {() ↦ [cmd x_1 ⇒ x_2]}
+   (focused-△consumer
+    ((▽bound x_1 prod) (△bound x_2 con 𝟙 +)) {() ↦ [cmd x_1 ⇒ x_2]}
     ((req x_2 con 𝟙 + 1) (req x_1 prod 𝟙 + 1)) {() ↦ [CMD x_1 ⇒ x_2]} 𝟙 +))
 
   (test-judgment-holds
-   (focused-synth-consumer
-    ((bound/synth x_1 con 𝟙 +)) {(pair (▽var x_2 𝟙) (nope 𝟙)) ↦ [cmd x_2 ⇒ x_1]}
+   (focused-△consumer
+    ((△bound x_1 con 𝟙 +)) {(pair (▽var x_2 𝟙) (nope 𝟙)) ↦ [cmd x_2 ⇒ x_1]}
     ((req x_1 con 𝟙 + 1))
     {(pair x_2 none) ↦ [CMD x_2 ⇒ x_1]}
     (𝟙 ⊗ 𝟙) +))
 
   (test-judgment-holds
-   (focused-synth-consumer
-    ((bound/synth x_1 con (𝟙 ⊗ 𝟙) +)) {(pair x_2 x_3) ↦ [cmd (pair x_3 x_2) ⇒ x_1]}
+   (focused-△consumer
+    ((△bound x_1 con (𝟙 ⊗ 𝟙) +)) {(pair x_2 x_3) ↦ [cmd (pair x_3 x_2) ⇒ x_1]}
     ((req x_1 con (𝟙 ⊗ 𝟙) + 1)) {(pair x_2 x_3) ↦ [CMD (pair x_3 x_2) ⇒ x_1]}
     (𝟙 ⊗ 𝟙) +))
 
   (test-judgment-holds
-   (focused-synth-consumer
-    ((bound/synth x con 𝟙 +)) x
+   (focused-△consumer
+    ((△bound x con 𝟙 +)) x
     ((req x con 𝟙 + 1)) x 𝟙 +))
   )
 
 
 
 (define-judgment-form BS-elab
-  #:mode (check-producer I I I I O O)
-  #:contract (check-producer ξ p τ κ Ξ P)
+  #:mode (▽producer I I I I O O)
+  #:contract (▽producer ξ p τ κ Ξ P)
 
-  [(valid-bind/synth △χ) (cut (extend-bindings ξ △χ con) k Ξ K) (elaborate-binding/synth Ξ △χ Ξ_′ X τ κ) (type-equal τ τ_′ κ)
-   --------------- "▽let_C"
-   (check-producer ξ {let/C △χ ↦ k} τ_′ κ Ξ_′ {let/C X ↦ K})]
+  [(valid-△bind △χ) (cut (bindings-snoc ξ △χ con) k Ξ K) (elaborate-binding/synth Ξ △χ Ξ_′ X τ κ) (type-= τ τ_′ κ)
+   ---------- "▽let_C"
+   (▽producer ξ {let/C △χ ↦ k} τ_′ κ Ξ_′ {let/C X ↦ K})]
 
-  [(focused-check-producer ξ w τ κ Ξ W)
-   --------------- "F_▽P"
-   (check-producer ξ w τ κ Ξ W)])
+  [(focused-▽producer ξ w τ κ Ξ W)
+   ---------- "F_▽P"
+   (▽producer ξ w τ κ Ξ W)])
 
 (module+ test
 
   (test-judgment-holds
-   (check-producer
-    ((bound/check x_1 prod)) {let/C (△var x_2 𝟙 +) ↦ [cmd x_1 ⇒ x_2]}
+   (▽producer
+    ((▽bound x_1 prod)) {let/C (△var x_2 𝟙 +) ↦ [cmd x_1 ⇒ x_2]}
     𝟙 +
     ((req x_1 prod 𝟙 + 1)) {let/C x_2 ↦ [CMD x_1 ⇒ x_2]}))
   )
 
 
 (define-judgment-form BS-elab
-  #:mode (focused-check-producer I I I I O O)
-  #:contract (focused-check-producer ξ w τ κ Ξ W)
+  #:mode (focused-▽producer I I I I O O)
+  #:contract (focused-▽producer ξ w τ κ Ξ W)
 
   [(var-check x prod ξ)
-   ----------------------- "▽Var_P"
-   (focused-check-producer ξ x τ κ ((req x prod τ κ 1)) x)]
+   ------------------ "▽Var_P"
+   (focused-▽producer ξ x τ κ ((req x prod τ κ 1)) x)]
   
-  [----------------------- "𝟙_P"
-   (focused-check-producer ξ () 𝟙 + () ())]
+  [------------------ "𝟙_P"
+   (focused-▽producer ξ () 𝟙 + () ())]
   
-  [(focused-check-producer ξ w_1 τ_1 + Ξ_1 W_1) (focused-check-producer ξ w_2 τ_2 + Ξ_2 W_2)
-   ----------------------- "⊗_P"
-   (focused-check-producer ξ (pair w_1 w_2) (τ_1 ⊗ τ_2) + (requirements-mul Ξ_1 Ξ_2) (pair W_1 W_2))]
+  [(focused-▽producer ξ w_1 τ_1 + Ξ_1 W_1) (focused-▽producer ξ w_2 τ_2 + Ξ_2 W_2)
+   ------------------ "⊗_P"
+   (focused-▽producer ξ (pair w_1 w_2) (τ_1 ⊗ τ_2) + (requirements-mul Ξ_1 Ξ_2) (pair W_1 W_2))]
 
-  [(focused-check-producer ξ w τ_l + Ξ W)
-   ----------------------- "⊕_Pl"
-   (focused-check-producer ξ (ιl w) (τ_l ⊕ τ_r) + Ξ (ιl W))]
+  [(focused-▽producer ξ w τ_l + Ξ W)
+   ------------------ "⊕_Pl"
+   (focused-▽producer ξ (ιl w) (τ_l ⊕ τ_r) + Ξ (ιl W))]
 
-  [(focused-check-producer ξ w τ_r + Ξ W)
-   ----------------------- "⊕_Pr"
-   (focused-check-producer ξ (ιr w) (τ_l ⊕ τ_r) + Ξ (ιr W))]
+  [(focused-▽producer ξ w τ_r + Ξ W)
+   ------------------ "⊕_Pr"
+   (focused-▽producer ξ (ιr w) (τ_l ⊕ τ_r) + Ξ (ιr W))]
 
-  [(focused-check-consumer ξ f τ - Ξ F)
-   ----------------------- "⊖_P"
-   (focused-check-producer ξ (pack f) (⊖ τ) + Ξ (⊖ F))]
+  [(focused-▽consumer ξ f τ - Ξ F)
+   ------------------ "⊖_P"
+   (focused-▽producer ξ (pack f) (⊖ τ) + Ξ (⊖ F))]
 
-  [(synth-producer ξ v- τ_′ - Ξ V-) (type-equal τ τ_′ -)
-   ----------------------- "↓_P"
-   (focused-check-producer ξ (dn v-) (↓ τ) + Ξ (dn V-))]
+  [(△producer ξ v- τ_′ - Ξ V-) (type-= τ τ_′ -)
+   ------------------ "↓_P"
+   (focused-▽producer ξ (dn v-) (↓ τ) + Ξ (dn V-))]
 
-  [(focused-check-producer ξ w τ + Ξ W)
-   ----------------------- "⇑_P"
-   (focused-check-producer ξ (UP w) (⇑ τ) - Ξ (UP W))])
+  [(focused-▽producer ξ w τ + Ξ W)
+   ------------------ "⇑_P"
+   (focused-▽producer ξ (UP w) (⇑ τ) - Ξ (UP W))])
 
 (module+ test
 
   (test-judgment-holds
-   (focused-check-producer
-    ((bound/check x prod)) x 𝟙 +
+   (focused-▽producer
+    ((▽bound x prod)) x 𝟙 +
     ((req x prod 𝟙 + 1)) x))
 
   (test-judgment-holds
-   (focused-check-producer
-    ((bound/check x_1 prod) (bound/check x_2 prod)) x_2 (𝟙 ⊗ 𝟙) +
+   (focused-▽producer
+    ((▽bound x_1 prod) (▽bound x_2 prod)) x_2 (𝟙 ⊗ 𝟙) +
     ((req x_2 prod (𝟙 ⊗ 𝟙) + 1)) x_2))
 
   (test-judgment-holds
-   (focused-check-producer
+   (focused-▽producer
     () (pair () ()) (𝟙 ⊗ 𝟙) +
     () (pair () ())))
   
   (test-judgment-holds
-   (focused-check-producer
-    ((bound/check x prod)) (pair (ιr x) ()) ((𝟘 ⊕ 𝟙) ⊗ 𝟙) +
+   (focused-▽producer
+    ((▽bound x prod)) (pair (ιr x) ()) ((𝟘 ⊕ 𝟙) ⊗ 𝟙) +
     ((req x prod 𝟙 + 1)) (pair (ιr x) ())))
 
   (test-judgment-holds
-   (focused-check-producer
-    ((bound/check x_1 prod) (bound/check x_2 prod)) (pair x_1 x_2) (𝟙 ⊗ 𝟙) +
+   (focused-▽producer
+    ((▽bound x_1 prod) (▽bound x_2 prod)) (pair x_1 x_2) (𝟙 ⊗ 𝟙) +
     ((req x_1 prod 𝟙 + 1) (req x_2 prod 𝟙 + 1)) (pair x_1 x_2)))
 
   (test-judgment-holds
-   (focused-check-producer
-    ((bound/check x_1 prod) (bound/check x_2 prod)) (pair x_1 x_1) (𝟙 ⊗ 𝟙) +
+   (focused-▽producer
+    ((▽bound x_1 prod) (▽bound x_2 prod)) (pair x_1 x_1) (𝟙 ⊗ 𝟙) +
     ((req x_1 prod 𝟙 + ω)) (pair x_1 x_1)))
   )
 
 
 
 (define-judgment-form BS-elab
-  #:mode (synth-producer I I O O O O)
-  #:contract (synth-producer ξ p Ξ P τ κ)
+  #:mode (△producer I I O O O O)
+  #:contract (△producer ξ p Ξ P τ κ)
 
-  [(valid-bind/check ▽χ κ) (cut (extend-bindings ξ ▽χ con) k Ξ K) (elaborate-binding/check Ξ ▽χ Ξ_′ X τ κ)
-   --------------- "△let_C"
-   (synth-producer ξ {let/C ▽χ κ ↦ k} Ξ_′ {let/C X ↦ K} τ κ)]
+  [(valid-▽bind ▽χ κ) (cut (bindings-snoc ξ ▽χ con) k Ξ K) (elaborate-binding/check Ξ ▽χ Ξ_′ X τ κ)
+   ---------- "△let_C"
+   (△producer ξ {let/C ▽χ κ ↦ k} Ξ_′ {let/C X ↦ K} τ κ)]
 
-  [(focused-synth-producer ξ w Ξ W τ κ)
-   --------------- "F_△P"
-   (synth-producer ξ w Ξ W τ κ)])
+  [(focused-△producer ξ w Ξ W τ κ)
+   ---------- "F_△P"
+   (△producer ξ w Ξ W τ κ)])
 
 (module+ test
 
   (test-judgment-holds
-   (synth-producer
-    ((bound/synth x_1 prod ⊥ -)) {let/C x_2 - ↦ [cmd x_1 ⇒ x_2]}
+   (△producer
+    ((△bound x_1 prod ⊥ -)) {let/C x_2 - ↦ [cmd x_1 ⇒ x_2]}
     ((req x_1 prod ⊥ - 1)) {let/C x_2 ↦ [CMD x_1 ⇒ x_2]}
     ⊥ -))
   )
@@ -684,69 +703,69 @@
 
 
 (define-judgment-form BS-elab
-  #:mode (focused-synth-producer I I O O O O)
-  #:contract (focused-synth-producer ξ w Ξ W τ κ)
+  #:mode (focused-△producer I I O O O O)
+  #:contract (focused-△producer ξ w Ξ W τ κ)
 
   [(var-synth x prod τ κ ξ)
-   ----------------------- "△Var_P"
-   (focused-synth-producer ξ x ((req x prod τ κ 1)) x τ κ)]
+   ------------------ "△Var_P"
+   (focused-△producer ξ x ((req x prod τ κ 1)) x τ κ)]
 
-  [----------------------- "⊤_P"
-   (focused-synth-producer ξ {⊤} ∅ {⊤} ⊤ -)]
+  [------------------ "⊤_P"
+   (focused-△producer ξ {⊤} ∅ {⊤} ⊤ -)]
 
   [(cut ξ k Ξ K)
-   ----------------------- "⊥_P"
-   (focused-synth-producer ξ {[] ↦ k} Ξ {[] ↦ K} ⊥ -)]
+   ------------------ "⊥_P"
+   (focused-△producer ξ {[] ↦ k} Ξ {[] ↦ K} ⊥ -)]
 
-  [(valid-bind/check ▽χ_1 -) (valid-bind/check ▽χ_2 -) (cut (extend-bindings (extend-bindings ξ ▽χ_1 con) ▽χ_2 con) k Ξ K)
+  [(valid-▽bind ▽χ_1 -) (valid-▽bind ▽χ_2 -) (cut (bindings-snoc (bindings-snoc ξ ▽χ_1 con) ▽χ_2 con) k Ξ K)
    (elaborate-binding/check Ξ ▽χ_1 Ξ_′ X_1 τ_1 -) (elaborate-binding/check Ξ_′ ▽χ_2 Ξ_′′ X_2 τ_2 -)
-   ----------------------- "⅋_P"
-   (focused-synth-producer ξ {[duo ▽χ_1 ▽χ_2] ↦ k} Ξ_′′ {[duo X_1 X_2] ↦ K} (τ_1 ⅋ τ_2) -)]
+   ------------------ "⅋_P"
+   (focused-△producer ξ {[duo ▽χ_1 ▽χ_2] ↦ k} Ξ_′′ {[duo X_1 X_2] ↦ K} (τ_1 ⅋ τ_2) -)]
 
-  [(valid-bind/check ▽χ_l -) (cut (extend-bindings ξ ▽χ_l con) k_l Ξ_l K_l) (elaborate-binding/check Ξ_l ▽χ_l Ξ_l′ X_l τ_l -)
-   (valid-bind/check ▽χ_r -) (cut (extend-bindings ξ ▽χ_r con) k_r Ξ_r K_r) (elaborate-binding/check Ξ_r ▽χ_r Ξ_r′ X_r τ_r -)
-   ----------------------- "&_P"
-   (focused-synth-producer ξ {[πl ▽χ_l] ↦ k_l \| [πr ▽χ_r] ↦ k_r} (requirements-add Ξ_l′ Ξ_r′) {[πl X_l] ↦ K_l \| [πr X_r] ↦ K_r} (τ_l & τ_r) -)]
+  [(valid-▽bind ▽χ_l -) (cut (bindings-snoc ξ ▽χ_l con) k_l Ξ_l K_l) (elaborate-binding/check Ξ_l ▽χ_l Ξ_l′ X_l τ_l -)
+   (valid-▽bind ▽χ_r -) (cut (bindings-snoc ξ ▽χ_r con) k_r Ξ_r K_r) (elaborate-binding/check Ξ_r ▽χ_r Ξ_r′ X_r τ_r -)
+   ------------------ "&_P"
+   (focused-△producer ξ {[πl ▽χ_l] ↦ k_l \| [πr ▽χ_r] ↦ k_r} (requirements-add Ξ_l′ Ξ_r′) {[πl X_l] ↦ K_l \| [πr X_r] ↦ K_r} (τ_l & τ_r) -)]
 
-  [(valid-bind/check ▽χ +) (cut (extend-bindings ξ ▽χ prod) k Ξ K) (elaborate-binding/check Ξ ▽χ Ξ_′ X τ +)
-   ----------------------- "¬_P"
-   (focused-synth-producer ξ {[throw ▽χ] ↦ k} Ξ_′ {[throw X] ↦ K} (¬ τ) -)]
+  [(valid-▽bind ▽χ +) (cut (bindings-snoc ξ ▽χ prod) k Ξ K) (elaborate-binding/check Ξ ▽χ Ξ_′ X τ +)
+   ------------------ "¬_P"
+   (focused-△producer ξ {[throw ▽χ] ↦ k} Ξ_′ {[throw X] ↦ K} (¬ τ) -)]
 
-  [(valid-bind/synth △χ) (cut (extend-bindings ξ △χ con) k Ξ K) (elaborate-binding/synth Ξ △χ Ξ_′ X τ +)
-   ----------------------- "↑_P"
-   (focused-synth-producer ξ {[up △χ] ↦ k} Ξ_′ {[up X] ↦ K} (↑ τ) -)]
+  [(valid-△bind △χ) (cut (bindings-snoc ξ △χ con) k Ξ K) (elaborate-binding/synth Ξ △χ Ξ_′ X τ +)
+   ------------------ "↑_P"
+   (focused-△producer ξ {[up △χ] ↦ k} Ξ_′ {[up X] ↦ K} (↑ τ) -)]
 
-  [(valid-bind/check ▽χ -) (cut (extend-bindings ξ ▽χ con) k Ξ K) (elaborate-binding/check Ξ ▽χ Ξ_′ X τ -)
-   ----------------------- "⇓_P"
-   (focused-synth-producer ξ {[DN ▽χ] ↦ k} Ξ_′ {[DN X] ↦ K} (⇓ τ) +)])
+  [(valid-▽bind ▽χ -) (cut (bindings-snoc ξ ▽χ con) k Ξ K) (elaborate-binding/check Ξ ▽χ Ξ_′ X τ -)
+   ------------------ "⇓_P"
+   (focused-△producer ξ {[DN ▽χ] ↦ k} Ξ_′ {[DN X] ↦ K} (⇓ τ) +)])
 
 (module+ test
 
   (test-judgment-holds
-   (focused-synth-producer
+   (focused-△producer
     () {⊤}
     ∅ {⊤} ⊤ -))
 
   (test-judgment-holds
-   (focused-synth-producer
-    ((bound/check x_1 prod) (bound/synth x_2 con 𝟙 +) (bound/synth x_3 prod ⊥ -)) {⊤}
+   (focused-△producer
+    ((▽bound x_1 prod) (△bound x_2 con 𝟙 +) (△bound x_3 prod ⊥ -)) {⊤}
     ∅ {⊤} ⊤ -))
 
   (test-judgment-holds
-   (focused-synth-producer
-    ((bound/check x_1 con) (bound/synth x_2 prod 𝟙 +)) {[] ↦ [cmd x_2 ⇒ x_1]}
+   (focused-△producer
+    ((▽bound x_1 con) (△bound x_2 prod 𝟙 +)) {[] ↦ [cmd x_2 ⇒ x_1]}
     ((req x_2 prod 𝟙 + 1) (req x_1 con 𝟙 + 1)) {[] ↦ [CMD x_2 ⇒ x_1]}
     ⊥ -))
 
   (test-judgment-holds
-   (focused-synth-producer
-    ((bound/synth x_1 prod ⊥ -)) {[duo x_2 (nope ⊥)] ↦ [cmd x_1 ⇒ x_2]}
+   (focused-△producer
+    ((△bound x_1 prod ⊥ -)) {[duo x_2 (nope ⊥)] ↦ [cmd x_1 ⇒ x_2]}
     ((req x_1 prod ⊥ - 1)) {[duo x_2 none] ↦ [CMD x_1 ⇒ x_2]}
     (⊥ ⅋ ⊥) -))
 
   (test-judgment-holds
-   (focused-synth-producer
-    ((bound/synth x_1 prod (⊥ ⅋ ⊥) -))
+   (focused-△producer
+    ((△bound x_1 prod (⊥ ⅋ ⊥) -))
     {[πl x_l] ↦ [cmd x_1 ⇒ [duo [] x_l]] \| [πr x_r] ↦ [cmd x_1 ⇒ [duo x_r x_r]]}
     ((req x_1 prod (⊥ ⅋ ⊥) - 1))
     {[πl x_l] ↦ [CMD x_1 ⇒ [duo [] x_l]] \| [πr x_r] ↦ [CMD x_1 ⇒ [duo x_r x_r]]}
@@ -756,102 +775,102 @@
 
 
 (define-judgment-form BS-elab
-  #:mode (check-consumer I I I I O O)
-  #:contract (check-consumer ξ c τ κ Ξ C)
+  #:mode (▽consumer I I I I O O)
+  #:contract (▽consumer ξ c τ κ Ξ C)
 
-  [(valid-bind/synth △χ) (cut (extend-bindings ξ △χ prod) k Ξ K) (elaborate-binding/synth Ξ △χ Ξ_′ X τ κ) (type-equal τ τ_′ κ)
-   --------------- "▽let_P"
-   (check-consumer ξ {let/P △χ ↦ k} τ_′ κ Ξ_′ {let/P X ↦ K})]
+  [(valid-△bind △χ) (cut (bindings-snoc ξ △χ prod) k Ξ K) (elaborate-binding/synth Ξ △χ Ξ_′ X τ κ) (type-= τ τ_′ κ)
+   ---------- "▽let_P"
+   (▽consumer ξ {let/P △χ ↦ k} τ_′ κ Ξ_′ {let/P X ↦ K})]
 
-  [(focused-check-consumer ξ f τ κ Ξ F)
-   --------------- "F_▽C"
-   (check-consumer ξ f τ κ Ξ F)])
+  [(focused-▽consumer ξ f τ κ Ξ F)
+   ---------- "F_▽C"
+   (▽consumer ξ f τ κ Ξ F)])
 
 (module+ test
 
   (test-judgment-holds
-   (check-consumer
-    ((bound/check x_1 con)) {let/P (△var x_2 ⊥ -) ↦ [cmd x_2 ⇒ x_1]}
+   (▽consumer
+    ((▽bound x_1 con)) {let/P (△var x_2 ⊥ -) ↦ [cmd x_2 ⇒ x_1]}
     ⊥ -
     ((req x_1 con ⊥ - 1)) {let/P x_2 ↦ [CMD x_2 ⇒ x_1]}))
   )
   
 
 (define-judgment-form BS-elab
-  #:mode (focused-check-consumer I I I I O O)
-  #:contract (focused-check-consumer ξ f τ κ Ξ F)
+  #:mode (focused-▽consumer I I I I O O)
+  #:contract (focused-▽consumer ξ f τ κ Ξ F)
 
   [(var-check x con ξ)
-   ----------------------- "▽Var_C"
-   (focused-check-consumer ξ x τ κ ((req x con τ κ 1)) x)]
+   ------------------ "▽Var_C"
+   (focused-▽consumer ξ x τ κ ((req x con τ κ 1)) x)]
 
-  [----------------------- "⊥_C"
-   (focused-check-consumer ξ [] ⊥ - () [])]
+  [------------------ "⊥_C"
+   (focused-▽consumer ξ [] ⊥ - () [])]
 
-  [(focused-check-consumer ξ f_1 τ_1 - Ξ_1 F_1) (focused-check-consumer ξ f_2 τ_2 - Ξ_2 F_2)
-   ----------------------- "⅋_C"
-   (focused-check-consumer ξ [duo f_1 f_2] (τ_1 ⅋ τ_2) - (requirements-mul Ξ_1 Ξ_2) [duo F_1 F_2])]
+  [(focused-▽consumer ξ f_1 τ_1 - Ξ_1 F_1) (focused-▽consumer ξ f_2 τ_2 - Ξ_2 F_2)
+   ------------------ "⅋_C"
+   (focused-▽consumer ξ [duo f_1 f_2] (τ_1 ⅋ τ_2) - (requirements-mul Ξ_1 Ξ_2) [duo F_1 F_2])]
 
-  [(focused-check-consumer ξ f τ_l - Ξ F)
-   ----------------------- "&_Cl"
-   (focused-check-consumer ξ [πl f] (τ_l & τ_r) - Ξ [πl F])]
+  [(focused-▽consumer ξ f τ_l - Ξ F)
+   ------------------ "&_Cl"
+   (focused-▽consumer ξ [πl f] (τ_l & τ_r) - Ξ [πl F])]
 
-  [(focused-check-consumer ξ f τ_r - Ξ F)
-   ----------------------- "&_Cr"
-   (focused-check-consumer ξ [πr f] (τ_l & τ_r) - Ξ [πr F])]
+  [(focused-▽consumer ξ f τ_r - Ξ F)
+   ------------------ "&_Cr"
+   (focused-▽consumer ξ [πr f] (τ_l & τ_r) - Ξ [πr F])]
 
-  [(focused-check-producer ξ w τ + Ξ W)
-   ----------------------- "¬_C"
-   (focused-check-consumer ξ [throw w] (¬ τ) - Ξ [throw W])]
+  [(focused-▽producer ξ w τ + Ξ W)
+   ------------------ "¬_C"
+   (focused-▽consumer ξ [throw w] (¬ τ) - Ξ [throw W])]
 
-  [(synth-consumer ξ q+ Ξ Q+ τ_′ +) (type-equal τ τ_′ +)
-   ----------------------- "↑_C"
-   (focused-check-consumer ξ [up q+] (↑ τ) - Ξ [up Q+])]
+  [(△consumer ξ q+ Ξ Q+ τ_′ +) (type-= τ τ_′ +)
+   ------------------ "↑_C"
+   (focused-▽consumer ξ [up q+] (↑ τ) - Ξ [up Q+])]
 
-  [(focused-check-consumer ξ f τ - Ξ F)
-   ----------------------- "⇓_C"
-   (focused-check-consumer ξ [DN f] (⇓ τ) + Ξ [DN F])])
+  [(focused-▽consumer ξ f τ - Ξ F)
+   ------------------ "⇓_C"
+   (focused-▽consumer ξ [DN f] (⇓ τ) + Ξ [DN F])])
 
 (module+ test
 
   (test-judgment-holds
-   (focused-check-consumer
+   (focused-▽consumer
     () [] ⊥ -
     () []))
 
   (test-judgment-holds
-   (focused-check-consumer
-    ((bound/check x_1 prod)) [] ⊥ -
+   (focused-▽consumer
+    ((▽bound x_1 prod)) [] ⊥ -
     () []))
 
   (test-judgment-holds
-   (focused-check-consumer
+   (focused-▽consumer
     () [duo [] []] (⊥ ⅋ ⊥) -
     () [duo [] []]))
 
   (test-judgment-holds
-   (focused-check-consumer
-    ((bound/check x_1 con) (bound/check x_2 con)) [duo x_1 x_2] (⊥ ⅋ ⊥) -
+   (focused-▽consumer
+    ((▽bound x_1 con) (▽bound x_2 con)) [duo x_1 x_2] (⊥ ⅋ ⊥) -
     ((req x_1 con ⊥ - 1) (req x_2 con ⊥ - 1)) [duo x_1 x_2]))
 
   (test-judgment-holds
-   (focused-check-consumer
-    ((bound/check x_1 prod) (bound/check x_2 con) (bound/check x_3 con)) [πl [πl x_2]] ((⊥ & ⊤) & ⊤) -
+   (focused-▽consumer
+    ((▽bound x_1 prod) (▽bound x_2 con) (▽bound x_3 con)) [πl [πl x_2]] ((⊥ & ⊤) & ⊤) -
     ((req x_2 con ⊥ - 1)) [πl [πl x_2]]))
 
   (test-judgment-holds
-   (focused-check-consumer
-    ((bound/check x_1 con) (bound/check x_2 con)) [πr [duo x_2 x_2]] (⊥ & (⊥ ⅋ ⊥)) -
+   (focused-▽consumer
+    ((▽bound x_1 con) (▽bound x_2 con)) [πr [duo x_2 x_2]] (⊥ & (⊥ ⅋ ⊥)) -
     ((req x_2 con ⊥ - ω)) [πr [duo x_2 x_2]]))
 
   (test-judgment-holds
-   (focused-check-consumer
+   (focused-▽consumer
     () [πl [πr [πl []]]] ((⊥ & (⊥ & ⊤)) & ⊤) -
     () [πl [πr [πl []]]]))
 
   (test-judgment-holds
-   (focused-check-consumer
-    ((bound/check x_1 con) (bound/check x_2 con)) [duo x_2 [duo x_1 x_2]] (⊥ ⅋ (⊥ ⅋ ⊥)) -
+   (focused-▽consumer
+    ((▽bound x_1 con) (▽bound x_2 con)) [duo x_2 [duo x_1 x_2]] (⊥ ⅋ (⊥ ⅋ ⊥)) -
     ((req x_1 con ⊥ - 1) (req x_2 con ⊥ - ω)) [duo x_2 [duo x_1 x_2]]))
   )
 
@@ -859,11 +878,13 @@
 
 (define-metafunction BS-elab
   maybe-substitute : K X any -> K
+
   [(maybe-substitute K x any) (substitute K x any)]
   [(maybe-substitute K none any) K])
 
 (define-metafunction BS-elab
   maybe-substitute2 : K X any X any -> K
+
   [(maybe-substitute2 K X_1 any_1 X_2 any_2) (substitute K [X_1 any_1] [X_2 any_2])]
   [(maybe-substitute2 K none any_1 X_2 any_2) (substitute K X_2 any_2)]
   [(maybe-substitute2 K X_1 any_1 none any_2) (substitute K X_1 any_1)])
@@ -1131,9 +1152,9 @@
                           (prettify (type-term x τ κ))]
                          [(list _ _ x τ κ ρ _)
                           (prettify x " : " τ " : " κ "; " ρ)])]
-         ['bound/check (match-λ [(list _ _ x o _)
+         ['▽bound (match-λ [(list _ _ x o _)
                                  (prettify x (orientation-script (lw-e o) #true))])]
-         ['bound/synth (match-λ [(list _ _ x o τ κ _)
+         ['△bound (match-λ [(list _ _ x o τ κ _)
                                  (prettify (type-term (list x (orientation-script (lw-e o) #true)) τ κ))])]
          ['nope (match-λ [(list _ _ τ _)
                           (prettify "_ : " τ)]
@@ -1145,50 +1166,52 @@
                                (prettify x (orientation-script (lw-e o) #true) " ∈ " ξ)])]
          ['var-synth (match-λ [(list _ _ x o τ κ ξ _)
                                (prettify (type-term x τ κ) " ∈ " ξ)])]
-         ['valid-bind/check (match-λ [(list _ _ χ κ _)
-                                (prettify χ " : " κ " ok")])]
-         ['valid-bind/synth (match-λ [(list _ _ χ _)
-                                (prettify χ " ok")])]
-         ['extend-bindings (match-λ [(list _ _  ξ χ o _)
-                                     (prettify ξ ", " (bind-or-var χ (lw-e o)))])]
+         ['valid-▽bind (match-λ [(list _ _ χ κ _)
+                                 (prettify χ " : " κ " ok")])]
+         ['valid-△bind (match-λ [(list _ _ χ _)
+                                 (prettify χ " ok")])]
+         ['bindings-snoc (match-λ [(list _ _  ξ χ o _)
+                                   (prettify ξ ", " (bind-or-var χ (lw-e o)))])]
          ['elaborate-binding/check (match-λ [(list _ _ Ξ χ Ξ_′ X τ κ _)
                                              (prettify  Ξ "⟦" χ "⟧ ↝ (" Ξ_′ "; " (type-term X τ κ) ")")])]
          ['elaborate-binding/synth (match-λ [(list _ _ Ξ χ Ξ_′ X τ κ _)
                                              (prettify  Ξ "⟦" χ "⟧ ↝ (" Ξ_′ "; " (type-term X τ κ) ")")])]
          ['kind-type (match-λ [(list _ _ τ κ _)
                                (prettify τ " : " κ)])]
-         ['kind-equal (match-λ [(list _ _ κ_1 κ_2 _)
-                                (prettify κ_1 " ≡ " κ_2)])]
-         ['type-equal (match-λ [(list _ _ τ_1 τ_2 κ _)
-                                (prettify τ_1 " ≡ " τ_2 " : " κ)])]
+         ['kind-= (match-λ [(list _ _ κ_1 κ_2 _)
+                            (prettify κ_1 " = " κ_2)])]
+         ['type-= (match-λ [(list _ _ τ_1 τ_2 κ _)
+                            (prettify τ_1 " = " τ_2 " : " κ)])]
          ['requirements-mul (match-λ [(list _ _ Ξ_1 Ξ_2 _)
                                       (prettify Ξ_1 " × " Ξ_2)])]
          ['requirements-add (match-λ [(list _ _ Ξ_1 Ξ_2 _)
                                       (prettify Ξ_1 " + " Ξ_2)])]
-         ['usage-equal (match-λ [(list _ _ ρ_1 ρ_2 _)
-                                 (prettify ρ_1 " ≡ " ρ_2)])]
-         ['usage-add (match-λ [(list _ _ ρ_0 ρ_1 _)
-                               (prettify ρ_0 " + " ρ_1)])]
+         ['usage-= (match-λ [(list _ _ ρ_1 ρ_2 _)
+                                 (prettify ρ_1 " = " ρ_2)])]
+         ['usage-+ (match-λ [(list _ _ ρ_0 ρ_1 _)
+                             (prettify ρ_0 " + " ρ_1)])]
+         ['usage-* (match-λ [(list _ _ ρ_0 ρ_1 _)
+                             (prettify ρ_0 " × " ρ_1)])]
          ['usage-max (match-λ [(list _ _ ρ_0 ρ_1 _)
                                (prettify ρ_0 " ⊔ " ρ_1)])]
          ['cut (match-λ [(list _ _ ξ k Ξ K _)
                          (prettify/elab-term ξ k Ξ K)])]
-         ['synth-consumer (match-λ [(list _ _ ξ c Ξ C τ κ _)
-                                    (prettify/elab-synth ξ c Ξ C τ κ #:ty 'con)])]
-         ['focused-synth-consumer (match-λ [(list _ _ ξ c Ξ C τ κ _)
-                                            (prettify/elab-synth ξ c Ξ C τ κ #:ty 'con #:focused? #true)])]
-         ['check-producer (match-λ [(list _ _ ξ p τ κ Ξ P _)
-                                    (prettify/elab-check ξ p τ κ Ξ P #:ty 'prod)])]
-         ['focused-check-producer (match-λ [(list _ _ ξ p τ κ Ξ P _)
-                                            (prettify/elab-check ξ p τ κ Ξ P #:ty 'prod #:focused? #true)])]
-         ['synth-producer (match-λ [(list _ _ ξ p Ξ P τ κ _)
-                                    (prettify/elab-synth ξ p Ξ P τ κ #:ty 'prod)])]
-         ['focused-synth-producer (match-λ [(list _ _ ξ p Ξ P τ κ _)
-                                            (prettify/elab-synth ξ p Ξ P τ κ #:ty 'prod #:focused? #true)])]
-         ['check-consumer (match-λ [(list _ _ ξ c τ κ Ξ C _)
-                                    (prettify/elab-check ξ c τ κ Ξ C #:ty 'con)])]
-         ['focused-check-consumer (match-λ [(list _ _ ξ c τ κ Ξ C _)
-                                            (prettify/elab-check ξ c τ κ Ξ C #:ty 'con #:focused? #true)])]
+         ['△consumer (match-λ [(list _ _ ξ c Ξ C τ κ _)
+                               (prettify/elab-synth ξ c Ξ C τ κ #:ty 'con)])]
+         ['focused-△consumer (match-λ [(list _ _ ξ c Ξ C τ κ _)
+                                       (prettify/elab-synth ξ c Ξ C τ κ #:ty 'con #:focused? #true)])]
+         ['▽producer (match-λ [(list _ _ ξ p τ κ Ξ P _)
+                               (prettify/elab-check ξ p τ κ Ξ P #:ty 'prod)])]
+         ['focused-▽producer (match-λ [(list _ _ ξ p τ κ Ξ P _)
+                                       (prettify/elab-check ξ p τ κ Ξ P #:ty 'prod #:focused? #true)])]
+         ['△producer (match-λ [(list _ _ ξ p Ξ P τ κ _)
+                               (prettify/elab-synth ξ p Ξ P τ κ #:ty 'prod)])]
+         ['focused-△producer (match-λ [(list _ _ ξ p Ξ P τ κ _)
+                                       (prettify/elab-synth ξ p Ξ P τ κ #:ty 'prod #:focused? #true)])]
+         ['▽consumer (match-λ [(list _ _ ξ c τ κ Ξ C _)
+                               (prettify/elab-check ξ c τ κ Ξ C #:ty 'con)])]
+         ['focused-▽consumer (match-λ [(list _ _ ξ c τ κ Ξ C _)
+                                       (prettify/elab-check ξ c τ κ Ξ C #:ty 'con #:focused? #true)])]
          ['substitute (match-λ [(list _ _ t (lw (list _ v_1 e_1 _) _ _ _ _ _ _) (lw (list _ v_2 e_2 _) _ _ _ _ _ _) _)
                                 (prettify t "[" v_1 " := " e_1 ", " v_2 " := " e_2 "]")]
                                [(list _ _ t v e _)

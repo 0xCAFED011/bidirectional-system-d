@@ -289,17 +289,17 @@ found in popular functional programming languages or proof-assistants based on d
 
 @(define fig:type-equal (make-tag))
 @figure[fig:type-equal
-        @elem{Kind-indexed type equality.@(linebreak)@(base:pretty-term (type-equal τ τ κ))}]{
+        @elem{Kind-indexed type equality.@(linebreak)@(base:pretty-term (type-= τ τ κ))}]{
  @(base:with-my-rewriters
    (λ ()
      (hb-append
       20
       (parameterize
-         ([judgment-form-cases '("𝟘_≡" "𝟙_≡" "⊗_≡" "⊕_≡" "⊖_≡" "↓_≡" "⇑_≡")])
-        (judgment-form->pict base:type-equal))
+         ([judgment-form-cases '("𝟘_=" "𝟙_=" "⊗_=" "⊕_=" "⊖_=" "↓_=" "⇑_=")])
+        (judgment-form->pict base:type-=))
       (parameterize
-         ([judgment-form-cases '("⊤_≡" "⊥_≡" "⅋_≡" "&_≡" "¬_≡" "↑_≡" "⇓_≡")])
-        (judgment-form->pict base:type-equal)))))
+         ([judgment-form-cases '("⊤_=" "⊥_=" "⅋_=" "&_=" "¬_=" "↑_=" "⇓_=")])
+        (judgment-form->pict base:type-=)))))
 }
 
 
@@ -338,26 +338,26 @@ found in popular functional programming languages or proof-assistants based on d
 
 @(define fig:whole-synth-consumer (make-tag))
 @figure[fig:whole-synth-consumer
-        @elem{Unfocused consumer synthesis.@(linebreak)@(base:pretty-term (synth-consumer ξ c Ξ C τ κ))}]{
- @(base:with-my-rewriters (λ () (judgment-form->pict base:synth-consumer)))
+        @elem{Unfocused consumer synthesis.@(linebreak)@(base:pretty-term (△consumer ξ c Ξ C τ κ))}]{
+ @(base:with-my-rewriters (λ () (judgment-form->pict base:△consumer)))
 }
 
 @(define fig:whole-check-producer (make-tag))
 @figure[fig:whole-check-producer
-        @elem{Unfocused producer checking.@(linebreak)@(base:pretty-term (check-producer ξ p τ κ Ξ P))}]{
- @(base:with-my-rewriters (λ () (judgment-form->pict base:check-producer)))
+        @elem{Unfocused producer checking.@(linebreak)@(base:pretty-term (▽producer ξ p τ κ Ξ P))}]{
+ @(base:with-my-rewriters (λ () (judgment-form->pict base:▽producer)))
 }
 
 @(define fig:whole-synth-producer (make-tag))
 @figure[fig:whole-synth-producer
-        @elem{Unfocused producer synthesis.@(linebreak)@(base:pretty-term (synth-producer ξ p Ξ P τ κ))}]{
- @(base:with-my-rewriters (λ () (judgment-form->pict base:synth-producer)))
+        @elem{Unfocused producer synthesis.@(linebreak)@(base:pretty-term (△producer ξ p Ξ P τ κ))}]{
+ @(base:with-my-rewriters (λ () (judgment-form->pict base:△producer)))
 }
 
 @(define fig:whole-check-consumer (make-tag))
 @figure[fig:whole-check-consumer
-        @elem{Unfocused consumer checking.@(linebreak)@(base:pretty-term (check-consumer ξ c τ κ Ξ C))}]{
- @(base:with-my-rewriters (λ () (judgment-form->pict base:check-consumer)))
+        @elem{Unfocused consumer checking.@(linebreak)@(base:pretty-term (▽consumer ξ c τ κ Ξ C))}]{
+ @(base:with-my-rewriters (λ () (judgment-form->pict base:▽consumer)))
 }
 
 
@@ -365,26 +365,26 @@ found in popular functional programming languages or proof-assistants based on d
 
 @(define fig:whole-focused-synth-consumer (make-tag))
 @figure[fig:whole-focused-synth-consumer
-        @elem{Focused consumer synthesis.@(linebreak)@(base:pretty-term (focused-synth-consumer ξ c Ξ C τ κ))}]{
- @(base:with-my-rewriters (λ () (judgment-form->pict base:focused-synth-consumer)))
+        @elem{Focused consumer synthesis.@(linebreak)@(base:pretty-term (focused-△consumer ξ c Ξ C τ κ))}]{
+ @(base:with-my-rewriters (λ () (judgment-form->pict base:focused-△consumer)))
 }
 
 @(define fig:whole-focused-check-producer (make-tag))
 @figure[fig:whole-focused-check-producer
-        @elem{Focused producer checking.@(linebreak)@(base:pretty-term (focused-check-producer ξ p τ κ Ξ P))}]{
- @(base:with-my-rewriters (λ () (judgment-form->pict base:focused-check-producer)))
+        @elem{Focused producer checking.@(linebreak)@(base:pretty-term (focused-▽producer ξ p τ κ Ξ P))}]{
+ @(base:with-my-rewriters (λ () (judgment-form->pict base:focused-▽producer)))
 }
 
 @(define fig:whole-focused-synth-producer (make-tag))
 @figure[fig:whole-focused-synth-producer
-        @elem{Focused producer synthesis.@(linebreak)@(base:pretty-term (focused-synth-producer ξ p Ξ P τ κ))}]{
- @(base:with-my-rewriters (λ () (judgment-form->pict base:focused-synth-producer)))
+        @elem{Focused producer synthesis.@(linebreak)@(base:pretty-term (focused-△producer ξ p Ξ P τ κ))}]{
+ @(base:with-my-rewriters (λ () (judgment-form->pict base:focused-△producer)))
 }
 
 @(define fig:whole-focused-check-consumer (make-tag))
 @figure[fig:whole-focused-check-consumer
-        @elem{Focused consumer checking.@(linebreak)@(base:pretty-term (focused-check-consumer ξ c τ κ Ξ C))}]{
- @(base:with-my-rewriters (λ () (judgment-form->pict base:focused-check-consumer)))
+        @elem{Focused consumer checking.@(linebreak)@(base:pretty-term (focused-▽consumer ξ c τ κ Ξ C))}]{
+ @(base:with-my-rewriters (λ () (judgment-form->pict base:focused-▽consumer)))
 }
 
 
