@@ -20,7 +20,7 @@
 @(label-font-size 12)
 @(metafunction-font-size 12)
 @(delimit-ellipsis-arguments? #true)
-@(metafunction-pict-style 'left-right)
+@(metafunction-pict-style 'left-right/vertical-side-conditions)
 @(metafunction-gap-space 10)
 @(rule-pict-style 'horizontal)
 
@@ -315,16 +315,17 @@ found in popular functional programming languages or proof-assistants based on d
  @(base:with-my-rewriters (λ () (judgment-form->pict base:elaborate-binding/synth)))
 }
 
-@(define fig:whole-mul-requirements (make-tag))
-@figure[fig:whole-mul-requirements
-        @elem{Requirment intersection.@(linebreak)@(base:pretty-metafunction-sig (requirements-mul Ξ Ξ) Ξ)}]{
- @(base:with-my-rewriters (λ () (metafunction->pict base:requirements-mul)))
+
+@(define fig:requirements-+ (make-tag))
+@figure[fig:requirements-+
+        @elem{Requirement addition.@linebreak[]@base:pretty-metafunction-sig[(requirements-+ Ξ Ξ) Ξ]}]{
+ @(base:with-my-rewriters (λ () (metafunction->pict base:requirements-+)))
 }
 
-@(define fig:whole-add-requirements (make-tag))
-@figure[fig:whole-add-requirements
-        @elem{Requirment union.@(linebreak)@(base:pretty-metafunction-sig (requirements-add Ξ Ξ) Ξ)}]{
- @(base:with-my-rewriters (λ () (metafunction->pict base:requirements-add)))
+@(define fig:requirements-⊔ (make-tag))
+@figure[fig:requirements-⊔
+        @elem{Requirement least upper bound.@linebreak[]@base:pretty-metafunction-sig[(requirements-⊔ Ξ Ξ) Ξ]}]{
+ @(base:with-my-rewriters (λ () (metafunction->pict base:requirements-⊔)))
 }
 
 

@@ -13,11 +13,11 @@
          var-synth
          elaborate-binding/check
          elaborate-binding/synth
-         requirements-mul
-         requirements-add
+         requirements-+
+         requirements-⊔
          usage-=
          usage-+
-         usage-max
+         usage-⊔
          cut
          △consumer
          focused-△consumer
@@ -127,6 +127,7 @@
   [ξ binding-context ::= (ψ ...)]
   [ψ variable-binding ::= (▽bound x o) (△bound x o τ κ)]
   [o orientation ::= prod con]
+  [υ mode-vector ::= () (ρ) (ρ ∧ ρ) (ρ ∨ ρ)]
   [Ξ requirements ::= ∅ (Ψ ...)]
   [Ψ variable-requirement ::= (req x o τ κ ρ)])
 
@@ -231,34 +232,52 @@
   [(usage-× ω ω) ω])
   
 (define-metafunction BS-elab
-  usage-max : ρ ρ -> ρ
+  usage-⊔ : ρ ρ -> ρ
 
-  [(usage-max 1 1) 1]
-  [(usage-max 1 ω) ω]
-  [(usage-max ω 1) ω]
-  [(usage-max ω ω) ω])
-
-
-(define-metafunction BS-elab
-  requirements-mul : Ξ Ξ -> Ξ
-
-  [(requirements-mul ∅ Ξ) ∅]
-  [(requirements-mul Ξ ∅) ∅]
-  [(requirements-mul (Ψ_l1 ... (req x o τ_l κ_l ρ_l) Ψ_l2 ...) (Ψ_r1 ... (req x o τ_r κ_r ρ_r) Ψ_r2 ...))
-   (requirements-mul (Ψ_l1 ... Ψ_l2 ...) (Ψ_r1 ... (req x o τ_l κ_l (usage-+ ρ_l ρ_r)) Ψ_r2 ...))
-   (judgment-holds (type-= τ_l τ_r κ_l))]
-  [(requirements-mul (Ψ_l ...) (Ψ_r ...)) (Ψ_l ... Ψ_r ...)])
+  [(usage-⊔ ρ ρ_′) ρ
+                   (judgment-holds (usage-< ρ_′ ρ))]
+  [(usage-⊔ ρ ρ_′) ρ_′
+                   (judgment-holds (usage-< ρ ρ_′))]
+  [(usage-⊔ ρ ρ_′) ρ
+                   (judgment-holds (usage-= ρ ρ_′))])
 
 
 (define-metafunction BS-elab
-  requirements-add : Ξ Ξ -> Ξ
+  requirements-+ : Ξ Ξ -> Ξ
 
-  [(requirements-add ∅ Ξ) Ξ]
-  [(requirements-add Ξ ∅) Ξ]
-  [(requirements-add (Ψ_l1 ... (req x o τ_l κ_l ρ_l) Ψ_l2 ...) (Ψ_r1 ... (req x o τ_r κ_r ρ_r) Ψ_r2 ...))
-   (requirements-add (Ψ_l1 ... Ψ_l2 ...) (Ψ_r1 ... (req x o τ_l κ_l (usage-max ρ_l ρ_r)) Ψ_r2 ...))
-   (judgment-holds (type-= τ_l τ_r κ_l))]
-  [(requirements-add (Ψ_l ...) (Ψ_r ...)) (Ψ_l ... Ψ_r ...)])
+  [(requirements-+ ∅ Ξ) ∅]
+  [(requirements-+ Ξ ∅) ∅]
+  [(requirements-+ (Ψ_l1 ... Ψ_l Ψ_l2 ...) (Ψ_r1 ... Ψ_r Ψ_r2 ...))
+   (requirements-+ (Ψ_l1 ... Ψ_l2 ...) (Ψ_r1 ... Ψ Ψ_r2 ...))
+   (where (req x o τ_l κ_l ρ_l) Ψ_l)
+   (where (req x o τ_r κ_r ρ_r) Ψ_r)
+   (judgment-holds (kind-= κ_l κ_r))
+   (judgment-holds (type-= τ_l τ_r κ_l))
+   (where Ψ (req x o τ_l κ_l (usage-+ ρ_l ρ_r)))]
+  [(requirements-+ (Ψ_l ...) (Ψ_r ...)) (Ψ_l ... Ψ_r ...)])
+
+
+(define-metafunction BS-elab
+  requirements-⊔ : Ξ Ξ -> Ξ
+
+  [(requirements-⊔ ∅ Ξ) Ξ]
+  [(requirements-⊔ Ξ ∅) Ξ]
+  [(requirements-⊔ (Ψ_l1 ... Ψ_l Ψ_l2 ...) (Ψ_r1 ... Ψ_r Ψ_r2 ...))
+   (requirements-⊔ (Ψ_l1 ... Ψ_l2 ...) (Ψ_r1 ... Ψ Ψ_r2 ...))
+   (where (req x o τ_l κ_l ρ_l) Ψ_l)
+   (where (req x o τ_r κ_r ρ_r) Ψ_r)
+   (judgment-holds (kind-= κ_l κ_r))
+   (judgment-holds (type-= τ_l τ_r κ_l))
+   (where Ψ (req x o τ_l κ_l (usage-⊔ ρ_l ρ_r)))]
+  [(requirements-⊔ (Ψ_l ...) (Ψ_r ...)) (Ψ_l ... Ψ_r ...)])
+
+
+(define-metafunction BS-elab
+  requirements-scale : Ξ υ -> Ξ
+
+  [(requirements-scale ∅ υ) ∅]
+  [(requirements-scale Ξ ()) ∅]
+  [(requirements-scale ((req x o τ κ ρ_′) ...) (ρ)) ((req x o τ κ (usage-× ρ_′ ρ)) ...)])
 
 
 
@@ -476,11 +495,11 @@
 
   [(△consumer ξ c Ξ_1 C τ κ) (▽producer ξ p τ κ Ξ_2 P)
    ----
-   (cut ξ [cmd p ⇒ c] (requirements-mul Ξ_1 Ξ_2) [CMD P ⇒ C])]
+   (cut ξ [cmd p ⇒ c] (requirements-+ Ξ_1 Ξ_2) [CMD P ⇒ C])]
 
   [(△producer ξ p Ξ_1 P τ κ) (▽consumer ξ c τ κ Ξ_2 C)
    ----
-   (cut ξ [cmd p ⇒ c] (requirements-mul Ξ_1 Ξ_2) [CMD P ⇒ C])])
+   (cut ξ [cmd p ⇒ c] (requirements-+ Ξ_1 Ξ_2) [CMD P ⇒ C])])
 
   
 
@@ -536,7 +555,7 @@
   [(valid-▽bind ▽χ_l +) (cut (bindings-snoc ξ ▽χ_l prod) k_l Ξ_l K_l) (elaborate-binding/check Ξ_l ▽χ_l Ξ_l′ X_l τ_l +)
    (valid-▽bind ▽χ_r +) (cut (bindings-snoc ξ ▽χ_r prod) k_r Ξ_r K_r) (elaborate-binding/check Ξ_r ▽χ_r Ξ_r′ X_r τ_r +)
    ------------------ "⊕_C"
-   (focused-△consumer ξ {(ιl ▽χ_l) ↦ k_l \| (ιr ▽χ_r) ↦ k_r} (requirements-add Ξ_l′ Ξ_r′) {(ιl X_l) ↦ K_l \| (ιr X_r) ↦ K_r} (τ_l ⊕ τ_r) +)]
+   (focused-△consumer ξ {(ιl ▽χ_l) ↦ k_l \| (ιr ▽χ_r) ↦ k_r} (requirements-⊔ Ξ_l′ Ξ_r′) {(ιl X_l) ↦ K_l \| (ιr X_r) ↦ K_r} (τ_l ⊕ τ_r) +)]
 
   [(valid-▽bind ▽χ -) (cut (bindings-snoc ξ ▽χ con) k Ξ K) (elaborate-binding/check Ξ ▽χ Ξ_′ X τ -)
    ------------------ "⊖_C"
@@ -622,7 +641,7 @@
   
   [(focused-▽producer ξ w_1 τ_1 + Ξ_1 W_1) (focused-▽producer ξ w_2 τ_2 + Ξ_2 W_2)
    ------------------ "⊗_P"
-   (focused-▽producer ξ (pair w_1 w_2) (τ_1 ⊗ τ_2) + (requirements-mul Ξ_1 Ξ_2) (pair W_1 W_2))]
+   (focused-▽producer ξ (pair w_1 w_2) (τ_1 ⊗ τ_2) + (requirements-+ Ξ_1 Ξ_2) (pair W_1 W_2))]
 
   [(focused-▽producer ξ w τ_l + Ξ W)
    ------------------ "⊕_Pl"
@@ -725,7 +744,7 @@
   [(valid-▽bind ▽χ_l -) (cut (bindings-snoc ξ ▽χ_l con) k_l Ξ_l K_l) (elaborate-binding/check Ξ_l ▽χ_l Ξ_l′ X_l τ_l -)
    (valid-▽bind ▽χ_r -) (cut (bindings-snoc ξ ▽χ_r con) k_r Ξ_r K_r) (elaborate-binding/check Ξ_r ▽χ_r Ξ_r′ X_r τ_r -)
    ------------------ "&_P"
-   (focused-△producer ξ {[πl ▽χ_l] ↦ k_l \| [πr ▽χ_r] ↦ k_r} (requirements-add Ξ_l′ Ξ_r′) {[πl X_l] ↦ K_l \| [πr X_r] ↦ K_r} (τ_l & τ_r) -)]
+   (focused-△producer ξ {[πl ▽χ_l] ↦ k_l \| [πr ▽χ_r] ↦ k_r} (requirements-⊔ Ξ_l′ Ξ_r′) {[πl X_l] ↦ K_l \| [πr X_r] ↦ K_r} (τ_l & τ_r) -)]
 
   [(valid-▽bind ▽χ +) (cut (bindings-snoc ξ ▽χ prod) k Ξ K) (elaborate-binding/check Ξ ▽χ Ξ_′ X τ +)
    ------------------ "¬_P"
@@ -809,7 +828,7 @@
 
   [(focused-▽consumer ξ f_1 τ_1 - Ξ_1 F_1) (focused-▽consumer ξ f_2 τ_2 - Ξ_2 F_2)
    ------------------ "⅋_C"
-   (focused-▽consumer ξ [duo f_1 f_2] (τ_1 ⅋ τ_2) - (requirements-mul Ξ_1 Ξ_2) [duo F_1 F_2])]
+   (focused-▽consumer ξ [duo f_1 f_2] (τ_1 ⅋ τ_2) - (requirements-+ Ξ_1 Ξ_2) [duo F_1 F_2])]
 
   [(focused-▽consumer ξ f τ_l - Ξ F)
    ------------------ "&_Cl"
@@ -1182,18 +1201,18 @@
                             (prettify κ_1 " = " κ_2)])]
          ['type-= (match-λ [(list _ _ τ_1 τ_2 κ _)
                             (prettify τ_1 " = " τ_2 " : " κ)])]
-         ['requirements-mul (match-λ [(list _ _ Ξ_1 Ξ_2 _)
-                                      (prettify Ξ_1 " × " Ξ_2)])]
-         ['requirements-add (match-λ [(list _ _ Ξ_1 Ξ_2 _)
-                                      (prettify Ξ_1 " + " Ξ_2)])]
+         ['requirements-+ (match-λ [(list _ _ Ξ_1 Ξ_2 _)
+                                    (prettify Ξ_1 " + " Ξ_2)])]
+         ['requirements-⊔ (match-λ [(list _ _ Ξ_1 Ξ_2 _)
+                                    (prettify Ξ_1 " ⊔ " Ξ_2)])]
          ['usage-= (match-λ [(list _ _ ρ_1 ρ_2 _)
                                  (prettify ρ_1 " = " ρ_2)])]
          ['usage-+ (match-λ [(list _ _ ρ_0 ρ_1 _)
                              (prettify ρ_0 " + " ρ_1)])]
          ['usage-* (match-λ [(list _ _ ρ_0 ρ_1 _)
                              (prettify ρ_0 " × " ρ_1)])]
-         ['usage-max (match-λ [(list _ _ ρ_0 ρ_1 _)
-                               (prettify ρ_0 " ⊔ " ρ_1)])]
+         ['usage-⊔ (match-λ [(list _ _ ρ_0 ρ_1 _)
+                             (prettify ρ_0 " ⊔ " ρ_1)])]
          ['cut (match-λ [(list _ _ ξ k Ξ K _)
                          (prettify/elab-term ξ k Ξ K)])]
          ['△consumer (match-λ [(list _ _ ξ c Ξ C τ κ _)
