@@ -303,16 +303,16 @@ found in popular functional programming languages or proof-assistants based on d
 }
 
 
-@(define fig:whole-elab-binding/check (make-tag))
-@figure[fig:whole-elab-binding/check
-        @elem{Checked binding elaboration.@(linebreak)@(base:pretty-term (elaborate-binding/check Ξ χ Ξ_′ X τ κ))}]{
- @(base:with-my-rewriters (λ () (judgment-form->pict base:elaborate-binding/check)))
+@(define fig:discharge-▽binding (make-tag))
+@figure[fig:discharge-▽binding
+        @elem{Checked binding discharge.@(linebreak)@(base:pretty-term (discharge-▽binding Ξ χ Ξ_′ X τ κ))}]{
+ @(base:with-my-rewriters (λ () (judgment-form->pict base:discharge-▽binding)))
 }
 
-@(define fig:whole-elab-binding/synth (make-tag))
-@figure[fig:whole-elab-binding/synth
-        @elem{Synthesizing binding elaboration.@(linebreak)@(base:pretty-term (elaborate-binding/synth Ξ χ Ξ_′ X τ κ))}]{
- @(base:with-my-rewriters (λ () (judgment-form->pict base:elaborate-binding/synth)))
+@(define fig:discharge-△binding (make-tag))
+@figure[fig:discharge-△binding
+        @elem{Synthesizing binding discharge.@(linebreak)@(base:pretty-term (discharge-△binding Ξ χ Ξ_′ X τ κ))}]{
+ @(base:with-my-rewriters (λ () (judgment-form->pict base:discharge-△binding)))
 }
 
 

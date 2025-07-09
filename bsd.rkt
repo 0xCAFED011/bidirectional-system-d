@@ -11,8 +11,8 @@
          bindings-snoc
          var-check
          var-synth
-         elaborate-binding/check
-         elaborate-binding/synth
+         discharge-▽binding
+         discharge-△binding
          requirements-+
          requirements-⊔
          usage-=
@@ -454,38 +454,38 @@
 
 
 (define-judgment-form BS-elab
-  #:mode (elaborate-binding/check I I O O O I)
-  #:contract (elaborate-binding/check Ξ ▽χ Ξ X τ κ)
+  #:mode (discharge-▽binding I I O O O I)
+  #:contract (discharge-▽binding Ξ ▽χ Ξ X τ κ)
 
   [(kind-= κ κ_′)
-   ------------------------
-   (elaborate-binding/check (Ψ_1 ... (req x o τ κ_′ ρ) Ψ_2 ...) x (Ψ_1 ... Ψ_2 ...) x τ κ)]
+   -------------------
+   (discharge-▽binding (Ψ_1 ... (req x o τ κ_′ ρ) Ψ_2 ...) x (Ψ_1 ... Ψ_2 ...) x τ κ)]
 
   [(kind-= κ κ_′) (type-= τ τ_′ κ)
-   ------------------------
-   (elaborate-binding/check (Ψ_1 ... (req x o τ_′ κ_′ ρ) Ψ_2 ...) (▽var x τ) (Ψ_1 ... Ψ_2 ...) x τ κ)]
+   -------------------
+   (discharge-▽binding (Ψ_1 ... (req x o τ_′ κ_′ ρ) Ψ_2 ...) (▽var x τ) (Ψ_1 ... Ψ_2 ...) x τ κ)]
   
   [(kind-= κ κ_′) (type-= τ τ_′ κ) (usage-= ρ ρ_′)
-   ------------------------
-   (elaborate-binding/check (Ψ_1 ... (req x o τ_′ κ_′ ρ_′) Ψ_2 ...) (▽var x τ ρ) (Ψ_1 ... Ψ_2 ...) x τ κ)]
+   -------------------
+   (discharge-▽binding (Ψ_1 ... (req x o τ_′ κ_′ ρ_′) Ψ_2 ...) (▽var x τ ρ) (Ψ_1 ... Ψ_2 ...) x τ κ)]
 
-  [(elaborate-binding/check Ξ (nope τ) Ξ none τ κ)])
+  [(discharge-▽binding Ξ (nope τ) Ξ none τ κ)])
 
 
 (define-judgment-form BS-elab
-  #:mode (elaborate-binding/synth I I O O O O)
-  #:contract (elaborate-binding/synth Ξ △χ Ξ X τ κ)
+  #:mode (discharge-△binding I I O O O O)
+  #:contract (discharge-△binding Ξ △χ Ξ X τ κ)
 
-  [------------------
-   (elaborate-binding/synth Ξ (nope τ κ) Ξ none τ κ)]
+  [-------------------
+   (discharge-△binding Ξ (nope τ κ) Ξ none τ κ)]
 
   [(kind-= κ κ_′) (type-= τ_′ τ κ)
-   ------------------
-   (elaborate-binding/synth (Ψ_1 ... (req x o τ_′ κ_′ ρ) Ψ_n ...) (△var x τ κ) (Ψ_1 ... Ψ_n ...) x τ κ)]
+   -------------------
+   (discharge-△binding (Ψ_1 ... (req x o τ_′ κ_′ ρ) Ψ_n ...) (△var x τ κ) (Ψ_1 ... Ψ_n ...) x τ κ)]
 
   [(kind-= κ κ_′) (type-= τ_′ τ κ) (usage-= ρ_′ ρ)
-   ------------------
-   (elaborate-binding/synth (Ψ_1 ... (req x o τ_′ κ_′ ρ_′) Ψ_n ...) (△var x τ κ ρ) (Ψ_1 ... Ψ_n ...) x τ κ)])
+   -------------------
+   (discharge-△binding (Ψ_1 ... (req x o τ_′ κ_′ ρ_′) Ψ_n ...) (△var x τ κ ρ) (Ψ_1 ... Ψ_n ...) x τ κ)])
 
 
 
@@ -507,7 +507,7 @@
   #:mode (△consumer I I O O O O)
   #:contract (△consumer ξ c Ξ C τ κ)
 
-  [(valid-▽bind ▽χ κ) (cut (bindings-snoc ξ ▽χ prod) k Ξ K) (elaborate-binding/check Ξ ▽χ Ξ_′ X τ κ)
+  [(valid-▽bind ▽χ κ) (cut (bindings-snoc ξ ▽χ prod) k Ξ K) (discharge-▽binding Ξ ▽χ Ξ_′ X τ κ)
    ----------"△let_P"
    (△consumer ξ {let/P ▽χ κ ↦ k} Ξ_′ {let/P X ↦ K} τ +)]
 
@@ -548,24 +548,24 @@
    (focused-△consumer ξ {() ↦ k} Ξ {() ↦ K} 𝟙 +)]
 
   [(valid-▽bind ▽χ_1 +) (valid-▽bind ▽χ_2 +) (cut (bindings-snoc (bindings-snoc ξ ▽χ_1 prod) ▽χ_2 prod) k Ξ K)
-   (elaborate-binding/check Ξ ▽χ_1 Ξ_′ X_1 τ_1 +) (elaborate-binding/check Ξ_′ ▽χ_2 Ξ_′′ X_2 τ_2 +)
+   (discharge-▽binding Ξ ▽χ_1 Ξ_′ X_1 τ_1 +) (discharge-▽binding Ξ_′ ▽χ_2 Ξ_′′ X_2 τ_2 +)
    ------------------ "⊗_C"
    (focused-△consumer ξ {(pair ▽χ_1 ▽χ_2) ↦ k} Ξ_′′ {(pair X_1 X_2) ↦ K} (τ_1 ⊗ τ_2) +)]
 
-  [(valid-▽bind ▽χ_l +) (cut (bindings-snoc ξ ▽χ_l prod) k_l Ξ_l K_l) (elaborate-binding/check Ξ_l ▽χ_l Ξ_l′ X_l τ_l +)
-   (valid-▽bind ▽χ_r +) (cut (bindings-snoc ξ ▽χ_r prod) k_r Ξ_r K_r) (elaborate-binding/check Ξ_r ▽χ_r Ξ_r′ X_r τ_r +)
+  [(valid-▽bind ▽χ_l +) (cut (bindings-snoc ξ ▽χ_l prod) k_l Ξ_l K_l) (discharge-▽binding Ξ_l ▽χ_l Ξ_l′ X_l τ_l +)
+   (valid-▽bind ▽χ_r +) (cut (bindings-snoc ξ ▽χ_r prod) k_r Ξ_r K_r) (discharge-▽binding Ξ_r ▽χ_r Ξ_r′ X_r τ_r +)
    ------------------ "⊕_C"
    (focused-△consumer ξ {(ιl ▽χ_l) ↦ k_l \| (ιr ▽χ_r) ↦ k_r} (requirements-⊔ Ξ_l′ Ξ_r′) {(ιl X_l) ↦ K_l \| (ιr X_r) ↦ K_r} (τ_l ⊕ τ_r) +)]
 
-  [(valid-▽bind ▽χ -) (cut (bindings-snoc ξ ▽χ con) k Ξ K) (elaborate-binding/check Ξ ▽χ Ξ_′ X τ -)
+  [(valid-▽bind ▽χ -) (cut (bindings-snoc ξ ▽χ con) k Ξ K) (discharge-▽binding Ξ ▽χ Ξ_′ X τ -)
    ------------------ "⊖_C"
    (focused-△consumer ξ {(pack ▽χ) ↦ k} Ξ_′ {(pack X) ↦ K} (⊖ τ) +)]
 
-  [(valid-△bind △χ) (cut (bindings-snoc ξ △χ prod) k Ξ K) (elaborate-binding/synth Ξ △χ Ξ_′ X τ -)
+  [(valid-△bind △χ) (cut (bindings-snoc ξ △χ prod) k Ξ K) (discharge-△binding Ξ △χ Ξ_′ X τ -)
    ------------------ "↓_C"
    (focused-△consumer ξ {(dn △χ) ↦ k} Ξ_′ {(dn X) ↦ K} (↓ τ) +)]
 
-  [(valid-▽bind ▽χ +) (cut (bindings-snoc ξ ▽χ prod) k Ξ K) (elaborate-binding/check Ξ ▽χ Ξ_′ X τ +)
+  [(valid-▽bind ▽χ +) (cut (bindings-snoc ξ ▽χ prod) k Ξ K) (discharge-▽binding Ξ ▽χ Ξ_′ X τ +)
    ------------------ "⇑_C"
    (focused-△consumer ξ {(⇑ ▽χ) ↦ k} Ξ_′ {(⇑ X) ↦ K} (⇑ τ) -)])
 
@@ -610,7 +610,7 @@
   #:mode (▽producer I I I I O O)
   #:contract (▽producer ξ p τ κ Ξ P)
 
-  [(valid-△bind △χ) (cut (bindings-snoc ξ △χ con) k Ξ K) (elaborate-binding/synth Ξ △χ Ξ_′ X τ κ) (type-= τ τ_′ κ)
+  [(valid-△bind △χ) (cut (bindings-snoc ξ △χ con) k Ξ K) (discharge-△binding Ξ △χ Ξ_′ X τ κ) (type-= τ τ_′ κ)
    ---------- "▽let_C"
    (▽producer ξ {let/C △χ ↦ k} τ_′ κ Ξ_′ {let/C X ↦ K})]
 
@@ -702,7 +702,7 @@
   #:mode (△producer I I O O O O)
   #:contract (△producer ξ p Ξ P τ κ)
 
-  [(valid-▽bind ▽χ κ) (cut (bindings-snoc ξ ▽χ con) k Ξ K) (elaborate-binding/check Ξ ▽χ Ξ_′ X τ κ)
+  [(valid-▽bind ▽χ κ) (cut (bindings-snoc ξ ▽χ con) k Ξ K) (discharge-▽binding Ξ ▽χ Ξ_′ X τ κ)
    ---------- "△let_C"
    (△producer ξ {let/C ▽χ κ ↦ k} Ξ_′ {let/C X ↦ K} τ κ)]
 
@@ -737,24 +737,24 @@
    (focused-△producer ξ {[] ↦ k} Ξ {[] ↦ K} ⊥ -)]
 
   [(valid-▽bind ▽χ_1 -) (valid-▽bind ▽χ_2 -) (cut (bindings-snoc (bindings-snoc ξ ▽χ_1 con) ▽χ_2 con) k Ξ K)
-   (elaborate-binding/check Ξ ▽χ_1 Ξ_′ X_1 τ_1 -) (elaborate-binding/check Ξ_′ ▽χ_2 Ξ_′′ X_2 τ_2 -)
+   (discharge-▽binding Ξ ▽χ_1 Ξ_′ X_1 τ_1 -) (discharge-▽binding Ξ_′ ▽χ_2 Ξ_′′ X_2 τ_2 -)
    ------------------ "⅋_P"
    (focused-△producer ξ {[duo ▽χ_1 ▽χ_2] ↦ k} Ξ_′′ {[duo X_1 X_2] ↦ K} (τ_1 ⅋ τ_2) -)]
 
-  [(valid-▽bind ▽χ_l -) (cut (bindings-snoc ξ ▽χ_l con) k_l Ξ_l K_l) (elaborate-binding/check Ξ_l ▽χ_l Ξ_l′ X_l τ_l -)
-   (valid-▽bind ▽χ_r -) (cut (bindings-snoc ξ ▽χ_r con) k_r Ξ_r K_r) (elaborate-binding/check Ξ_r ▽χ_r Ξ_r′ X_r τ_r -)
+  [(valid-▽bind ▽χ_l -) (cut (bindings-snoc ξ ▽χ_l con) k_l Ξ_l K_l) (discharge-▽binding Ξ_l ▽χ_l Ξ_l′ X_l τ_l -)
+   (valid-▽bind ▽χ_r -) (cut (bindings-snoc ξ ▽χ_r con) k_r Ξ_r K_r) (discharge-▽binding Ξ_r ▽χ_r Ξ_r′ X_r τ_r -)
    ------------------ "&_P"
    (focused-△producer ξ {[πl ▽χ_l] ↦ k_l \| [πr ▽χ_r] ↦ k_r} (requirements-⊔ Ξ_l′ Ξ_r′) {[πl X_l] ↦ K_l \| [πr X_r] ↦ K_r} (τ_l & τ_r) -)]
 
-  [(valid-▽bind ▽χ +) (cut (bindings-snoc ξ ▽χ prod) k Ξ K) (elaborate-binding/check Ξ ▽χ Ξ_′ X τ +)
+  [(valid-▽bind ▽χ +) (cut (bindings-snoc ξ ▽χ prod) k Ξ K) (discharge-▽binding Ξ ▽χ Ξ_′ X τ +)
    ------------------ "¬_P"
    (focused-△producer ξ {[throw ▽χ] ↦ k} Ξ_′ {[throw X] ↦ K} (¬ τ) -)]
 
-  [(valid-△bind △χ) (cut (bindings-snoc ξ △χ con) k Ξ K) (elaborate-binding/synth Ξ △χ Ξ_′ X τ +)
+  [(valid-△bind △χ) (cut (bindings-snoc ξ △χ con) k Ξ K) (discharge-△binding Ξ △χ Ξ_′ X τ +)
    ------------------ "↑_P"
    (focused-△producer ξ {[up △χ] ↦ k} Ξ_′ {[up X] ↦ K} (↑ τ) -)]
 
-  [(valid-▽bind ▽χ -) (cut (bindings-snoc ξ ▽χ con) k Ξ K) (elaborate-binding/check Ξ ▽χ Ξ_′ X τ -)
+  [(valid-▽bind ▽χ -) (cut (bindings-snoc ξ ▽χ con) k Ξ K) (discharge-▽binding Ξ ▽χ Ξ_′ X τ -)
    ------------------ "⇓_P"
    (focused-△producer ξ {[DN ▽χ] ↦ k} Ξ_′ {[DN X] ↦ K} (⇓ τ) +)])
 
@@ -797,7 +797,7 @@
   #:mode (▽consumer I I I I O O)
   #:contract (▽consumer ξ c τ κ Ξ C)
 
-  [(valid-△bind △χ) (cut (bindings-snoc ξ △χ prod) k Ξ K) (elaborate-binding/synth Ξ △χ Ξ_′ X τ κ) (type-= τ τ_′ κ)
+  [(valid-△bind △χ) (cut (bindings-snoc ξ △χ prod) k Ξ K) (discharge-△binding Ξ △χ Ξ_′ X τ κ) (type-= τ τ_′ κ)
    ---------- "▽let_P"
    (▽consumer ξ {let/P △χ ↦ k} τ_′ κ Ξ_′ {let/P X ↦ K})]
 
@@ -994,12 +994,6 @@
   (define-syntax-rule (mk-CMD prod con)
     (term [CMD prod ⇒ con]))
 
-  (define-syntax-rule (mk-CMD+ prod con)
-    (term [CMD prod ⇒ + con]))
-
-  (define-syntax-rule (mk-CMD- prod con)
-    (term [CMD prod ⇒ - con]))
-
   (define-syntax match+
     (syntax-rules ()
       [(match+ () body) (term (() ↦ body))]
@@ -1191,10 +1185,10 @@
                                  (prettify χ " ok")])]
          ['bindings-snoc (match-λ [(list _ _  ξ χ o _)
                                    (prettify ξ ", " (bind-or-var χ (lw-e o)))])]
-         ['elaborate-binding/check (match-λ [(list _ _ Ξ χ Ξ_′ X τ κ _)
-                                             (prettify  Ξ "⟦" χ "⟧ ↝ (" Ξ_′ "; " (type-term X τ κ) ")")])]
-         ['elaborate-binding/synth (match-λ [(list _ _ Ξ χ Ξ_′ X τ κ _)
-                                             (prettify  Ξ "⟦" χ "⟧ ↝ (" Ξ_′ "; " (type-term X τ κ) ")")])]
+         ['discharge-▽binding (match-λ [(list _ _ Ξ χ Ξ_′ X τ κ _)
+                                        (prettify  Ξ "⟦" χ "⟧ ↝ (" Ξ_′ "; " (type-term X τ κ) ")")])]
+         ['discharge-△binding (match-λ [(list _ _ Ξ χ Ξ_′ X τ κ _)
+                                        (prettify  Ξ "⟦" χ "⟧ ↝ (" Ξ_′ "; " (type-term X τ κ) ")")])]
          ['kind-type (match-λ [(list _ _ τ κ _)
                                (prettify τ " : " κ)])]
          ['kind-= (match-λ [(list _ _ κ_1 κ_2 _)
