@@ -3,25 +3,25 @@
 (require redex/reduction-semantics)
 
 (provide BS-raw
-           BS-exec
-           BS-elab
-           bindings-snoc
-           var-check
-           var-synth
-           discharge-▽binding
-           discharge-△binding
-           requirements-⊔
-           requirements-⊓
-           cut
-           △consumer
-           pattern->bindtree/~p
-           expand-pattern/~p
-           ▽producer
-           △producer
-           pattern->bindtree/~c
-           expand-pattern/~c
-           ▽consumer
-           red/BS)
+         BS-exec
+         BS-elab
+         bindings-snoc
+         var-check
+         var-synth
+         discharge-▽binding
+         discharge-△binding
+         requirements-⊔
+         requirements-⊓
+         cut
+         △consumer
+         pattern->bindtree/~p
+         expand-pattern/~p
+         ▽producer
+         △producer
+         pattern->bindtree/~c
+         expand-pattern/~c
+         ▽consumer
+         red/BS)
   
 
 (define-language BS-raw
@@ -54,14 +54,12 @@
   () #:exports nothing
   (pair ~p_1 ~p_2) #:exports (shadow ~p_1 ~p_2)
   (pack ~c) #:exports ~c
-  (UP ~p) #:exports ~p
   {let/P ~c ↦ k #:refers-to ~c}
   {[πl ~c_l] ↦ k_0 #:refers-to ~c_l \| [πl ~c_r] ↦ k_1 #:refers-to ~c_r}
   {[πl ~c] ↦ k #:refers-to ~c}
   {[πr ~c] ↦ k #:refers-to ~c}
   [duo ~c_1 ~c_2] #:exports (shadow ~c_1 ~c_2)
-  [throw ~p] #:exports ~p
-  [DN ~c] #:exports ~c)
+  [throw ~p] #:exports ~p)
 
 
 
@@ -356,70 +354,59 @@
 
 
 (define-judgment-form BS-elab
-  #:mode (cut I I O O)
-  #:contract (cut Γ k Ξ K)
+  #:mode (cut I O I O)
+  #:contract (cut Γ Ξ k K)
 
-  [(△consumer Γ c Ξ_1 C τ κ) (▽producer Γ p Ξ_2 τ P)
+  [(△consumer Γ Ξ_1 c τ κ C) (▽producer Γ Ξ_2 τ p P)
    ----
-   (cut Γ [cmd p ◊ c] (requirements-⊓ Ξ_1 Ξ_2) [CMD P κ C])]
+   (cut Γ (requirements-⊓ Ξ_1 Ξ_2) [cmd p ◊ c] [CMD P κ C])]
 
-  [(△producer Γ p Ξ_1 P τ κ) (▽consumer Γ c Ξ_2 τ C)
+  [(△producer Γ Ξ_1 p τ κ P) (▽consumer Γ Ξ_2 τ c C)
    ----
-   (cut Γ [cmd p ◊ c] (requirements-⊓ Ξ_1 Ξ_2) [CMD P κ C])])
+   (cut Γ (requirements-⊓ Ξ_1 Ξ_2) [cmd p ◊ c] [CMD P κ C])])
 
 
 
 (define-judgment-form BS-elab
-  #:mode (△consumer I I O O O O)
-  #:contract (△consumer Γ c Ξ C τ κ)
+  #:mode (△consumer I O I O O O)
+  #:contract (△consumer Γ Ξ c τ κ C)
 
-  [(cut (bindings-snoc Γ ~p) k Ξ K) (pattern->bindtree/~p Ξ ~p Ξ_′ ζ)
-   (where F (expand-pattern/~p Γ ζ K)) (extract-type ζ τ) (△type τ +)
-   (where x (fresh-immediate F))
+  [(cut (bindings-snoc Γ ~p) Ξ k K) (pattern->bindtree/~p Ξ ~p Ξ_′ ζ) (where F (expand-pattern/~p Γ ζ K)) (extract-type ζ τ) (△type τ +) (where x (fresh-immediate F))
    ----------
-   (△consumer Γ {let/P ~p ↦ k} Ξ_′ {let/P x ↦ [CMD x + F]} τ +)]
+   (△consumer Γ Ξ_′ {let/P ~p ↦ k} τ + {let/P x ↦ [CMD x + F]})]
 
   [(var-synth x τ Γ) (△type τ κ)
    ----------
-   (△consumer Γ x ((req x con τ)) x τ κ)]
+   (△consumer Γ ((req x con τ)) x τ κ x)]
   
   [----------
-   (△consumer Γ {↦} ∅ {↦} 𝟘 +)]
+   (△consumer Γ ∅ {↦} 𝟘 + {↦})]
   
-  [(cut Γ k Ξ K)
+  [(cut Γ Ξ k K)
    ----------
-   (△consumer Γ {() ↦ k} Ξ {() ↦ K} 𝟙 +)]
+   (△consumer Γ Ξ {() ↦ k} 𝟙 + {() ↦ K})]
 
-  [(cut (bindings-snoc Γ ~p) k Ξ K) (pattern->bindtree/~p Ξ ~p Ξ_′ ζ)
-   (where F (expand-pattern/~p Γ ζ K)) (extract-type ζ τ) (△type τ κ)
+  [(cut (bindings-snoc Γ ~p) Ξ k K) (pattern->bindtree/~p Ξ ~p Ξ_′ ζ) (where F (expand-pattern/~p Γ ζ K)) (extract-type ζ τ) (△type τ κ)
    ----------
-   (△consumer Γ {~p ↦ k} Ξ_′ F τ κ)]
+   (△consumer Γ Ξ {~p ↦ k} τ κ F)]
 
-  [(cut (bindings-snoc Γ ~p_l) k_l Ξ_l K_l) (pattern->bindtree/~p Ξ_l ~p_l Ξ_l′ ζ_l)
-   (where P_l (expand-pattern ζ_l K_l)) (extract-type ζ_l τ_l) (△type τ_l +)
-   (where x_l (fresh-immediate (Γ K_l)))
-   (cut (bindings-snoc Γ ~p_r) k_r Ξ_r K_r) (pattern->bindtree/~p Ξ_r ~p_r Ξ_r′ ζ_r)
-   (where P_r (expand-pattern ζ_r K_r)) (extract-type ζ_r τ_r) (△type τ_r +)
-   (where x_r (fresh-immediate (Γ K_r)))
+  [(cut (bindings-snoc Γ ~p_l) Ξ_l k_l K_l) (pattern->bindtree/~p Ξ_l ~p_l Ξ_l′ ζ_l) (where F_l (expand-pattern/~p Γ ζ_l K_l)) (extract-type ζ_l τ_l) (△type τ_l +) (where x_l (fresh-immediate (Γ F_l)))
+   (cut (bindings-snoc Γ ~p_r) Ξ_r k_r K_r) (pattern->bindtree/~p Ξ_r ~p_r Ξ_r′ ζ_r) (where F_r (expand-pattern/~p Γ ζ_r K_r)) (extract-type ζ_r τ_r) (△type τ_r +) (where x_r (fresh-immediate (Γ F_r)))
    ----------
-   (△consumer Γ {(ιl ~p_l) ↦ k_l \| (ιr ~p_r) ↦ k_r}
-     (requirements-⊓ Ξ_l′ Ξ_r′) {(ιl x_l) ↦ [CMD x_l + K_l] \| (ιr x_r) ↦ [CMD x_r + K_r]} (τ_l ⊕ τ_r) +)]
+   (△consumer Γ (requirements-⊓ Ξ_l′ Ξ_r′) {(ιl ~p_l) ↦ k_l \| (ιr ~p_r) ↦ k_r} (τ_l ⊕ τ_r) +
+      {(ιl x_l) ↦ [CMD x_l + K_l] \| (ιr x_r) ↦ [CMD x_r + K_r]})]
 
-  [(cut (bindings-snoc Γ ~p_l) k_l Ξ_l K_l) (pattern->bindtree/~p Ξ_l ~p_l Ξ_l′ ζ_l)
-   (where P_l (expand-pattern ζ_l K_l)) (extract-type ζ_l τ_l) (△type τ_l +)
-   (where x_l (fresh-immediate (Γ K_l)))
-   (where x_r (fresh-immediate Γ))
+  [(cut (bindings-snoc Γ ~p_l) Ξ_l k_l K_l) (pattern->bindtree/~p Ξ_l ~p_l Ξ_l′ ζ_l) (where F_l (expand-pattern/~p Γ ζ_l K_l)) (extract-type ζ_l τ_l) (△type τ_l +)
+   (where x_l (fresh-immediate (Γ F_l))) (where x_r (fresh-immediate Γ))
    ----------
-   (△consumer Γ {(ιl ~p_l) ↦ k_l}
-     (requirements-⊓ Ξ_l′ ∅) {(ιl x_l) ↦ [CMD x_l + K_l] \| (ιr x_r) ↦ [CMD x_r + {↦}]} (τ_l ⊕ 𝟘) +)]
+   (△consumer Γ (requirements-⊓ Ξ_l′ ∅) {(ιl ~p_l) ↦ k_l} (τ_l ⊕ 𝟘) +
+     {(ιl x_l) ↦ [CMD x_l + K_l] \| (ιr x_r) ↦ [CMD x_r + {↦}]})]
 
-  [(cut (bindings-snoc Γ ~p_r) k_r Ξ_r K_r) (pattern->bindtree/~p Ξ_r ~p_r Ξ_r′ ζ_r)
-   (where P_r (expand-pattern ζ_r K_r)) (extract-type ζ_r τ_r) (△type τ_r +)
-   (where x_r (fresh-immediate (Γ K_r)))
-   (where x_l (fresh-immediate Γ))
+  [(cut (bindings-snoc Γ ~p_r) Ξ_r k_r K_r) (pattern->bindtree/~p Ξ_r ~p_r Ξ_r′ ζ_r) (where F_r (expand-pattern/~p Γ ζ_r K_r)) (extract-type ζ_r τ_r) (△type τ_r +)
+   (where x_r (fresh-immediate (Γ F_r))) (where x_l (fresh-immediate Γ))
    ----------
-   (△consumer Γ {(ιr ~p_r) ↦ k_r}
-     (requirements-⊓ ∅ Ξ_r′) {(ιl x_l) ↦ [CMD x_l + {↦}] \| (ιr x_r) ↦ [CMD x_r + K_r]} (𝟘 ⊕ τ_r) +)])
+   (△consumer Γ (requirements-⊓ ∅ Ξ_r′) {(ιr ~p_r) ↦ k_r} (𝟘 ⊕ τ_r) +
+     {(ιl x_l) ↦ [CMD x_l + {↦}] \| (ιr x_r) ↦ [CMD x_r + K_r]})])
 
 
 
@@ -453,7 +440,7 @@
 
 
 (define-metafunction BS-elab
-  expand-pattern/~p : Γ ζ K -> C
+  expand-pattern/~p : Γ ζ K -> F
 
   [(expand-pattern/~p Γ 𝟙 K)
    {() ↦ K}]
@@ -509,99 +496,88 @@
 
 
 (define-judgment-form BS-elab
-  #:mode (▽producer I I O I O)
-  #:contract (▽producer Γ p Ξ τ P)
+  #:mode (▽producer I O I I O)
+  #:contract (▽producer Γ Ξ τ p P)
 
-  [(cut (bindings-snoc Γ △χ) k Ξ K) (discharge-△binding Ξ △χ Ξ_′ X τ_′) (type-= τ_′ τ)
+  [(cut (bindings-snoc Γ △χ) Ξ k K) (discharge-△binding Ξ △χ Ξ_′ X τ_′) (type-= τ_′ τ)
    (where x (maybe-fresh X (Γ K)))
    ----------
-   (▽producer Γ {let/C △χ ↦ k} Ξ_′ τ {let/C x ↦ K})]
+   (▽producer Γ Ξ_′ τ {let/C △χ ↦ k} {let/C x ↦ K})]
 
   [(var-check x Γ)
    ---------- "▽Var_P"
-   (▽producer Γ x ((req x prod τ)) τ x)]
+   (▽producer Γ ((req x prod τ)) τ x x)]
   
   [---------- "𝟙_P"
-   (▽producer Γ () () 𝟙 ())]
+   (▽producer Γ () 𝟙 () ())]
   
-  [(▽producer Γ p_1 Ξ_1 τ_1 W_1) (▽producer Γ p_2 Ξ_2 τ_2 W_2)
+  [(▽producer Γ Ξ_1 τ_1 p_1 W_1) (▽producer Γ Ξ_2 τ_2 p_2 W_2)
    ---------- "⊗_P"
-   (▽producer Γ (pair p_1 p_2) (requirements-⊔ Ξ_1 Ξ_2) (τ_1 ⊗ τ_2) (pair W_1 W_2))]
+   (▽producer Γ (requirements-⊔ Ξ_1 Ξ_2) (τ_1 ⊗ τ_2) (pair p_1 p_2) (pair W_1 W_2))]
 
-  [(▽producer Γ p Ξ τ_l W)
+  [(▽producer Γ Ξ τ_l p W)
    ---------- "⊕_Pl"
-   (▽producer Γ (ιl p) Ξ (τ_l ⊕ τ_r) (ιl W))]
+   (▽producer Γ Ξ (τ_l ⊕ τ_r) (ιl p) (ιl W))]
 
-  [(▽producer Γ p Ξ τ_r W)
+  [(▽producer Γ Ξ τ_r p W)
    ---------- "⊕_Pr"
-   (▽producer Γ (ιr p) Ξ (τ_l ⊕ τ_r) (ιr W))]
+   (▽producer Γ Ξ (τ_l ⊕ τ_r) (ιr p) (ιr W))]
 
-  [(▽consumer Γ c Ξ τ F)
+  [(▽consumer Γ Ξ τ c F)
    ---------- "⊖_P"
-   (▽producer Γ (pack c) Ξ (⊖ τ) (⊖ F))]
+   (▽producer Γ Ξ (⊖ τ) (pack c) (⊖ F))]
 
-  [(△producer Γ p Ξ P τ_′ κ) (kind-= κ -) (type-= τ_′ τ)
+  [(△producer Γ Ξ p τ_′ κ P) (kind-= κ -) (type-= τ_′ τ)
    ---------- "↓_P"
-   (▽producer Γ p Ξ τ (dn P))]
+   (▽producer Γ Ξ τ p (dn P))]
 
-  [(▽producer Γ p Ξ τ W)
+  [(▽producer Γ Ξ τ p W)
    ---------- "⇑_P"
-   (▽producer Γ (UP p) Ξ (⇑ τ) (UP W))])
+   (▽producer Γ Ξ (⇑ τ) (UP p) (UP W))])
 
 
 
 
 (define-judgment-form BS-elab
-  #:mode (△producer I I O O O O)
-  #:contract (△producer Γ p Ξ P τ κ)
+  #:mode (△producer I O I O O O)
+  #:contract (△producer Γ Ξ p τ κ P)
 
-  [(cut (bindings-snoc Γ ~c) k Ξ K) (pattern->bindtree/~c Ξ ~c Ξ_′ ζ)
-   (where W (expand-pattern/~c Γ ζ)) (extract-type ζ τ) (△type τ -)
-   (where x (fresh-immediate (Γ W)))
+  [(cut (bindings-snoc Γ ~c) Ξ k K) (pattern->bindtree/~c Ξ ~c Ξ_′ ζ) (where W (expand-pattern/~c Γ ζ K)) (extract-type ζ τ) (△type τ -) (where x (fresh-immediate (Γ W)))
    ----------
-   (△producer Γ {let/C ~c κ ↦ k} Ξ_′ {let/C x ↦ [CMD W - x]} τ -)]
+   (△producer Γ Ξ_′ {let/C ~c κ ↦ k} τ - {let/C x ↦ [CMD W - x]})]
 
   [(var-synth x τ Γ) (△type τ κ)
    ----------
-   (△producer Γ x ((req x prod τ)) x τ κ)]
+   (△producer Γ ((req x prod τ)) x τ κ x)]
 
   [----------
-   (△producer Γ {↦} ∅ {↦} ⊤ -)]
+   (△producer Γ ∅ {↦} ⊤ - {↦})]
 
-  [(cut Γ k Ξ K)
+  [(cut Γ Ξ k K)
    ----------
-   (△producer Γ {[] ↦ k} Ξ {[] ↦ K} ⊥ -)]
+   (△producer Γ Ξ {[] ↦ k} ⊥ - {[] ↦ K})]
 
-  [(cut (bindings-snoc Γ ~c) k Ξ K) (pattern->bindtree/~c Ξ ~c Ξ_′ ζ)
-   (where W (expand-pattern/~c Γ ζ K)) (extract-type ζ τ) (△type τ κ)
+  [(cut (bindings-snoc Γ ~c) Ξ k K) (pattern->bindtree/~c Ξ ~c Ξ_′ ζ) (where W (expand-pattern/~c Γ ζ K)) (extract-type ζ τ) (△type τ κ)
    ----------
-   (△producer Γ {~c ↦ k} Ξ_′ W τ κ)]
+   (△producer Γ Ξ_′ {~c ↦ k} τ κ W)]
 
-  [(cut (bindings-snoc Γ ~c_l) k_l Ξ_l K_l) (pattern->bindtree/~c Ξ_l ~c_l Ξ_l′ ζ_l)
-   (where W_l (expand-pattern/~c ζ_l K_l)) (extract-type ζ_l τ_l) (△type τ_l -)
-   (where x_l ,(variable-not-in (term K_l) 'x_l))
-   (cut (bindings-snoc Γ ~c_r) k_r Ξ_r K_r) (pattern->bindtree/~c Ξ_r ~c_r Ξ_r′ ζ_r)
-   (where W_r (expand-pattern/~c ζ_r K_r)) (extract-type ζ_r τ_r) (△type τ_r -)
-   (where x_r ,(variable-not-in (term K_r) 'x_r))
+  [(cut (bindings-snoc Γ ~c_l) Ξ_l k_l K_l) (pattern->bindtree/~c Ξ_l ~c_l Ξ_l′ ζ_l) (where W_l (expand-pattern/~c Γ ζ_l K_l)) (extract-type ζ_l τ_l) (△type τ_l -) (where x_l (fresh-immediate (Γ W_l)))
+   (cut (bindings-snoc Γ ~c_r) Ξ_r k_r K_r) (pattern->bindtree/~c Ξ_r ~c_r Ξ_r′ ζ_r) (where W_r (expand-pattern/~c Γ ζ_r K_r)) (extract-type ζ_r τ_r) (△type τ_r -) (where x_r (fresh-immediate (Γ W_r)))
    ----------
-   (△producer Γ {[πl ~c_l] ↦ k_l \| [πr ~c_r] ↦ k_r}
-     (requirements-⊓ Ξ_l′ Ξ_r′) {[πl x_l] ↦ [CMD W_l - x_l] \| [πr x_r] ↦ [CMD W_r - x_r]} (τ_l & τ_r) -)]
+   (△producer Γ (requirements-⊓ Ξ_l′ Ξ_r′) {[πl ~c_l] ↦ k_l \| [πr ~c_r] ↦ k_r} (τ_l & τ_r) -
+     {[πl x_l] ↦ [CMD W_l - x_l] \| [πr x_r] ↦ [CMD W_r - x_r]})]
 
-  [(cut (bindings-snoc Γ ~c_l) k_l Ξ_l K_l) (pattern->bindtree/~c Ξ_l ~c_l Ξ_l′ ζ_l)
-   (where W_l (expand-pattern/~c ζ_l K_l)) (extract-type ζ_l τ_l) (△type τ_l -)
-   (where x_l ,(variable-not-in (term K_l) 'x_l))
-   (where x_r ,(variable-not-in (term ()) 'x_r))
+  [(cut (bindings-snoc Γ ~c_l) Ξ_l k_l K_l) (pattern->bindtree/~c Ξ_l ~c_l Ξ_l′ ζ_l) (where W_l (expand-pattern/~c Γ ζ_l K_l)) (extract-type ζ_l τ_l) (△type τ_l -)
+   (where x_l (fresh-immediate (Γ W_l))) (where x_r (fresh-immediate (Γ)))
    ----------
-   (△producer Γ {[πl ~c_l] ↦ k_l}
-     (requirements-⊓ Ξ_l′ ∅) {[πl x_l] ↦ [CMD W_l - x_l] \| [πr x_r] ↦ [CMD {↦} - x_r]} (τ_l & 𝟘) -)]
+   (△producer Γ (requirements-⊓ Ξ_l′ ∅) {[πl ~c_l] ↦ k_l} (τ_l & 𝟘) -
+     {[πl x_l] ↦ [CMD W_l - x_l] \| [πr x_r] ↦ [CMD {↦} - x_r]})]
 
-  [(cut (bindings-snoc Γ ~c_r) k_r Ξ_r K_r) (pattern->bindtree/~c Ξ_r ~c_r Ξ_r′ ζ_r)
-   (where W_r (expand-pattern/~c ζ_r K_r)) (extract-type ζ_r τ_r) (△type τ_r -)
-   (where x_r ,(variable-not-in (term K_r) 'x_r))
-   (where x_l ,(variable-not-in (term ()) 'x_l))
+ [(cut (bindings-snoc Γ ~c_r) Ξ_r k_r K_r) (pattern->bindtree/~c Ξ_r ~c_r Ξ_r′ ζ_r) (where W_r (expand-pattern/~c Γ ζ_r K_r)) (extract-type ζ_r τ_r) (△type τ_r -)
+   (where x_r (fresh-immediate (Γ W_r))) (where x_l (fresh-immediate (Γ)))
    ----------
-   (△producer Γ {[πl ~c_l] ↦ k_l \| [πr ~c_r] ↦ k_r}
-     (requirements-⊓ ∅ Ξ_r′) {[πl x_l] ↦ [CMD {↦} - x_l] \| [πr x_r] ↦ [CMD W_r - x_r]} (𝟘 & τ_r) -)])
+   (△producer Γ (requirements-⊓ ∅ Ξ_r′) {[πl ~c_l] ↦ k_l \| [πr ~c_r] ↦ k_r} (𝟘 & τ_r) -
+     {[πl x_l] ↦ [CMD {↦} - x_l] \| [πr x_r] ↦ [CMD W_r - x_r]})])
 
 
 
@@ -686,44 +662,44 @@
 
 
 (define-judgment-form BS-elab
-  #:mode (▽consumer I I O I O)
-  #:contract (▽consumer Γ c Ξ τ C)
+  #:mode (▽consumer I O I I O)
+  #:contract (▽consumer Γ Ξ τ c C)
   
-  [(cut (bindings-snoc Γ △χ) k Ξ K) (discharge-△binding Ξ △χ Ξ_′ X τ_′) (type-= τ_′ τ)
+  [(cut (bindings-snoc Γ △χ) Ξ k K) (discharge-△binding Ξ △χ Ξ_′ X τ_′) (type-= τ_′ τ)
    (where x (maybe-fresh X (Γ K)))
    ----------
-   (▽consumer Γ {let/P △χ ↦ k} Ξ_′ τ {let/P x ↦ K})]
+   (▽consumer Γ Ξ_′ τ {let/P △χ ↦ k} {let/P x ↦ K})]
 
   [(var-check x Γ)
    ----------
-   (▽consumer Γ x ((req x con τ)) τ x)]
+   (▽consumer Γ ((req x con τ)) x τ x)]
 
   [----------
-   (▽consumer Γ [] () ⊥ [])]
+   (▽consumer Γ () ⊥ [] [])]
 
-  [(▽consumer Γ c_1 Ξ_1 τ_1 F_1) (▽consumer Γ c_2 Ξ_2 τ_2 F_2)
+  [(▽consumer Γ Ξ_1 τ_1 c_1 F_1) (▽consumer Γ Ξ_2 τ_2 c_2 F_2)
    ----------
-   (▽consumer Γ [duo c_1 c_2] (requirements-⊔ Ξ_1 Ξ_2) (τ_1 ⅋ τ_2) [duo F_1 F_2])]
+   (▽consumer Γ (requirements-⊔ Ξ_1 Ξ_2) (τ_1 ⅋ τ_2) [duo c_1 c_2] [duo F_1 F_2])]
 
-  [(▽consumer Γ c Ξ τ_l F)
+  [(▽consumer Γ Ξ τ_l c F)
    ----------
-   (▽consumer Γ [πl c] Ξ (τ_l & τ_r) [πl F])]
+   (▽consumer Γ Ξ (τ_l & τ_r) [πl c] [πl F])]
 
-  [(▽consumer Γ c Ξ τ_r F)
+  [(▽consumer Γ Ξ τ_r c F)
    ----------
-   (▽consumer Γ [πr c] Ξ (τ_l & τ_r) [πr F])]
+   (▽consumer Γ Ξ (τ_l & τ_r) [πr c] [πr F])]
 
-  [(▽producer Γ p Ξ τ W)
+  [(▽producer Γ Ξ τ p W)
    ----------
-   (▽consumer Γ [throw p] Ξ (¬ τ) [throw W])]
+   (▽consumer Γ Ξ (¬ τ) [throw p] [throw W])]
 
-  [(△consumer Γ c Ξ C τ_′ κ) (kind-= κ +) (type-= τ_′ τ)
+  [(△consumer Γ Ξ c τ_′ κ C) (kind-= κ +) (type-= τ_′ τ)
    ----------
-   (▽consumer Γ c Ξ τ [up C])]
+   (▽consumer Γ Ξ τ c [up C])]
 
-  [(▽consumer Γ c Ξ τ F)
+  [(▽consumer Γ Ξ τ c F)
    ----------
-   (▽consumer Γ [DN c] Ξ (⇓ τ) [DN F])])
+   (▽consumer Γ Ξ (⇓ τ) [DN c] [DN F])])
 
 
 
@@ -748,7 +724,7 @@
         "𝟙_β"]
 
    [--> [CMD (pair W_1 W_2) + {(pair X_1 X_2) ↦ K}]
-        (substitute K X_1 W_1 X_2 W_2)
+        (substitute K [X_1 W_1]  [X_2 W_2])
         "⊗_β"]
 
    [--> [CMD (ιl W) + {(ιl X_l) ↦ K_l \| (ιr X_r) ↦ K_r}]
@@ -784,7 +760,7 @@
         "⊥_β"]
 
    [--> [CMD {[duo X_1 X_2] ↦ K} - [duo F_1 F_2]]
-        (substitute2 K X_1 F_1 X_2 F_2)
+        (substitute2 K [X_1 F_1] [X_2 F_2])
         "⅋_β"]
 
    [--> [CMD {[πl X_l] ↦ K_l \| [πr X_r] ↦ K_r} - [πl F]]
@@ -862,16 +838,11 @@
   (define (prettify . stuff)
     (flatten (list "" stuff "")))
 
-  (define (prettify/elab-term ξ t Ξ T #:ty [ty #false] #:focused? [focused? #false])
-    (define syntactic-turnstile (text (if focused? " ⊩ " " ⊢ ") (literal-style)))
-    (define semantic-turnstile (text (if focused? " ⊫" " ⊨") (literal-style)))
-    (define syntactic-fence (if ty
-                                (list (hb-append syntactic-turnstile (orientation-script ty #true)) " ")
-                                (list syntactic-turnstile " ")))
-    (define semantic-fence (if ty
-                               (list (hb-append semantic-turnstile (orientation-script ty #true)) " ")
-                               (list semantic-turnstile " ")))
-    (prettify "⟦" (list ξ syntactic-fence t) "⟧ ↝ " (list Ξ semantic-fence T)))
+  (define (prettify/elab-term Γ Ξ t T #:ty [ty #false])
+    (define turnstile (if ty
+                          (list (hb-append (text " ⊢" (literal-style)) (orientation-script ty #true)) " ")
+                          (list " ⊢ ")))
+    (prettify "⟦" (list Γ "; " Ξ turnstile t) "⟧ ↝ " (list T)))
 
   (define (orientation-script type sub?)
     (define script (if sub? 'subscript 'superscript))
@@ -885,11 +856,11 @@
     (list x (orientation-script o #false)))
 
   
-  (define (prettify/elab-synth ξ t Ξ T τ κ #:ty ty #:focused? [focused? #false])
-    (prettify/elab-term ξ t Ξ (list T " ∈ " τ " ∈ " κ) #:ty ty #:focused? focused?))
+  (define (prettify/elab-synth ξ Ξ t τ κ T #:ty ty)
+    (prettify/elab-term ξ Ξ (list t " ∈ " τ " ∈ " κ) T #:ty ty))
 
-  (define (prettify/elab-check ξ t Ξ τ T #:ty ty #:focused? [focused? #false])
-    (prettify/elab-term ξ t Ξ (list τ " ∋ " T) #:ty ty #:focused? focused?))
+  (define (prettify/elab-check ξ Ξ τ t T #:ty ty)
+    (prettify/elab-term ξ Ξ (list τ " ∋ " t) T #:ty ty))
 
   
   (define (with-my-rewriters proc)
@@ -898,62 +869,64 @@
                           (prettify "(" p_1 ", " p_2 ")")])]
          ['duo (match-λ [(list _ _ c_1 c_2 _)
                          (prettify "[" c_1 ", " c_2 "]")])]
-         ['cmd (match-λ [(list _ _ p ⇒ c _)
-                         (prettify p ⇒ c)])]
-         ['CMD (match-λ [(list _ _ P ⇒ C _)
-                         (prettify P ⇒ C)])]
-         ['▽var (match-λ [(list _ _ x τ _)
+         ['cmd (match-λ [(list _ _ p ◊ c _)
+                         (prettify p ◊ c)])]
+         ['CMD (match-λ [(list _ _ P κ C _)
+                         (prettify P κ C)])]
+         ['△var (match-λ [(list _ _ x τ _)
                           (prettify x " : " τ)])]
-         ['△var (match-λ [(list _ _ x τ κ _)
-                          (prettify x " : " τ " : " κ)])]
-         ['▽bound (match-λ [(list _ _ x o _)
-                            (prettify x (orientation-script (lw-e o) #false))])]
-         ['△bound (match-λ [(list _ _ x o τ κ _)
-                            (prettify (list x (orientation-script (lw-e o) #false) " : " τ " : " κ))])]
+         ['▽bound (match-λ [(list _ _ x _)
+                            (prettify x)])]
+         ['△bound (match-λ [(list _ _ x τ _)
+                            (prettify x " : " τ)])]
          ['nope (match-λ [(list _ _ τ _)
                           (prettify "_ : " τ)])]
-         ['req (match-λ [(list _ _ x o τ κ _)
-                         (prettify (bind-or-var x (lw-e o)) " : " τ " : " κ)])]
-         ['var-check (match-λ [(list _ _ x o Γ _)
-                               (prettify x (orientation-script (lw-e o) #false) " ∈ " Γ)])]
-         ['var-synth (match-λ [(list _ _ x o τ κ Γ _)
-                               (prettify x " : " τ " : " κ " ∈ " Γ)])]
-         ['valid-▽bind (match-λ [(list _ _ χ κ _)
-                                 (prettify χ " : " κ " ok")])]
-         ['valid-△bind (match-λ [(list _ _ χ _)
-                                 (prettify χ " ok")])]
-         ['bindings-snoc (match-λ [(list _ _  ξ χ o _)
-                                   (prettify ξ ", " (bind-or-var χ (lw-e o)))])]
+         ['req (match-λ [(list _ _ x o τ _)
+                         (prettify (bind-or-var x (lw-e o)) " : " τ)])]
+         ['var-check (match-λ [(list _ _ x Γ _)
+                               (prettify x " ∈ " Γ)])]
+         ['var-synth (match-λ [(list _ _ x τ Γ _)
+                               (prettify x " : " τ " ∈ " Γ)])]
+         ['bindings-snoc (match-λ [(list _ _  Γ ~~ _)
+                                   (prettify Γ ", " ~~)])]
          ['discharge-▽binding (match-λ [(list _ _ Ξ χ Ξ_′ X τ _)
                                         (prettify  Ξ "⟦" χ "⟧ ↝ " Ξ_′ "; " X " : " τ)])]
          ['discharge-△binding (match-λ [(list _ _ Ξ χ Ξ_′ X τ _)
                                         (prettify  Ξ "⟦" χ "⟧ ↝ " Ξ_′ "; " X " : " τ)])]
+         ['maybe-fresh (match-λ [(list _ _ ~X stuff _)
+                                 (prettify ~X ".?fresh(" stuff ")")])]
+         ['fresh-immediate (match-λ [(list _ _ stuff _)
+                                     (prettify "fresh(" stuff ")")])]
+         ['pattern->bindtree/~p (match-λ [(list _ _ Ξ ~p Ξ_′ ζ _)
+                                          (prettify Ξ "[" ~p "] → " Ξ_′ "; " ζ)])]
+         ['pattern->bindtree/~c (match-λ [(list _ _ Ξ ~c Ξ_′ ζ _)
+                                          (prettify Ξ "[" ~c "] → " Ξ_′ "; " ζ)])]
+         ['expand-pattern/~p (match-λ [(list _ _ Γ ζ K _)
+                                       (prettify "expand(" Γ ", " ζ ", " K ")" )])]
+         ['expand-pattern/~c (match-λ [(list _ _ Γ ζ K _)
+                                       (prettify "expand(" Γ ", " ζ ", " K ")" )])]
+         ['extract-type (match-λ [(list _ _ ζ τ _)
+                                  (prettify ζ " ⇒ " τ)])]
+         ['△type (match-λ [(list _ _ τ κ _)
+                           (prettify τ " ∈ " κ)])]
          ['kind-= (match-λ [(list _ _ κ κ_′ _)
                             (prettify κ " = " κ_′)])]
-         ['type-= (match-λ [(list _ _ τ τ_′ κ _)
-                            (prettify τ " = " τ_′ " : " κ)])]
+         ['type-= (match-λ [(list _ _ τ τ_′ _)
+                            (prettify τ " = " τ_′)])]
          ['requirements-⊔ (match-λ [(list _ _ Ξ_1 Ξ_2 _)
                                     (prettify Ξ_1 " ⊔ " Ξ_2)])]
          ['requirements-⊓ (match-λ [(list _ _ Ξ_1 Ξ_2 _)
                                     (prettify Ξ_1 " ⊓ " Ξ_2)])]
-         ['cut (match-λ [(list _ _ ξ k Ξ K _)
-                         (prettify/elab-term ξ k Ξ K)])]
-         ['△consumer (match-λ [(list _ _ ξ c Ξ C τ κ _)
-                               (prettify/elab-synth ξ c Ξ C τ κ #:ty 'con)])]
-         ['focused-△consumer (match-λ [(list _ _ ξ c Ξ C τ κ _)
-                                       (prettify/elab-synth ξ c Ξ C τ κ #:ty 'con #:focused? #true)])]
-         ['▽producer (match-λ [(list _ _ ξ p τ Ξ P _)
-                               (prettify/elab-check ξ p τ Ξ P #:ty 'prod)])]
-         ['focused-▽producer (match-λ [(list _ _ ξ p τ Ξ P _)
-                                       (prettify/elab-check ξ p τ Ξ P #:ty 'prod #:focused? #true)])]
-         ['△producer (match-λ [(list _ _ ξ p Ξ P τ κ _)
-                               (prettify/elab-synth ξ p Ξ P τ κ #:ty 'prod)])]
-         ['focused-△producer (match-λ [(list _ _ ξ p Ξ P τ κ _)
-                                       (prettify/elab-synth ξ p Ξ P τ κ #:ty 'prod #:focused? #true)])]
-         ['▽consumer (match-λ [(list _ _ ξ c τ Ξ C _)
-                               (prettify/elab-check ξ c τ Ξ C #:ty 'con)])]
-         ['focused-▽consumer (match-λ [(list _ _ ξ c τ Ξ C _)
-                                       (prettify/elab-check ξ c τ Ξ C #:ty 'con #:focused? #true)])]
+         ['cut (match-λ [(list _ _ ξ Ξ k K _)
+                         (prettify/elab-term ξ Ξ k K)])]
+         ['△consumer (match-λ [(list _ _ ξ Ξ c τ κ C _)
+                               (prettify/elab-synth ξ Ξ c τ κ C #:ty 'con)])]
+         ['▽producer (match-λ [(list _ _ ξ Ξ τ p P _)
+                               (prettify/elab-check ξ Ξ τ p P #:ty 'prod)])]
+         ['△producer (match-λ [(list _ _ ξ Ξ p τ κ P _)
+                               (prettify/elab-synth ξ Ξ p τ κ P #:ty 'prod)])]
+         ['▽consumer (match-λ [(list _ _ ξ Ξ τ c C _)
+                               (prettify/elab-check ξ Ξ τ c C #:ty 'con)])]
          ['substitute (match-λ [(list _ _ t (lw (list _ v_1 e_1 _) _ _ _ _ _ _) (lw (list _ v_2 e_2 _) _ _ _ _ _ _) _)
                                 (prettify t "[" v_1 " := " e_1 ", " v_2 " := " e_2 "]")]
                                [(list _ _ t v e _)
